@@ -1,3 +1,56 @@
+-- Profiles Table (Linked to Auth.Users)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  cf_handle TEXT,
+  ac_handle TEXT,
+  avatar_url TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Trigger to create a profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id)
+  VALUES (new.id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Participants Table
+CREATE TABLE IF NOT EXISTS participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contest_id UUID REFERENCES contests(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(contest_id, user_id)
+);
+
+-- Enable RLS for participants
+ALTER TABLE participants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read participants" ON participants FOR SELECT USING (true);
+CREATE POLICY "Users can join contests" ON participants FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Comments Table
+CREATE TABLE IF NOT EXISTS comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contest_id UUID REFERENCES contests(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  parent_id UUID REFERENCES comments(id) ON DELETE CASCADE, -- For nested replies
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS for comments
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read comments" ON comments FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can post comments" ON comments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
 -- Enable Realtime for the submissions table
 -- In Supabase UI: Database > Replication > Enable Realtime for 'submissions'
 
@@ -39,11 +92,14 @@ CREATE TABLE IF NOT EXISTS submissions (
 );
 
 -- Enable Row Level Security (RLS)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE problems ENABLE ROW LEVEL SECURITY;
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 
 -- Simple Policies (adjust as needed for security)
+CREATE POLICY "Public read profiles" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Public read contests" ON contests FOR SELECT USING (true);
 CREATE POLICY "Public read problems" ON problems FOR SELECT USING (true);
 CREATE POLICY "Public read submissions" ON submissions FOR SELECT USING (true);

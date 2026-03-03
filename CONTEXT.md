@@ -36,21 +36,21 @@ Instead of a central server attempting to log in and submit on behalf of users, 
 - [x] Submission Polling & Supabase Real-time updates
 
 ### Phase 2: User Experience & Auth
-- [ ] Supabase Authentication (GitHub/Google login)
-- [ ] User Profile (Codeforces/AtCoder handle verification)
-- [ ] Monaco/CodeMirror Editor Integration (Syntax highlighting)
-- [ ] Code Autosave (LocalStorage)
+- [x] Supabase Authentication (GitHub/Google login)
+- [x] User Profile (Codeforces/AtCoder handle verification)
+- [x] Monaco/CodeMirror Editor Integration (Syntax highlighting)
+- [x] Code Autosave (LocalStorage)
 
 ### Phase 3: Multi-OJ Support
-- [ ] AtCoder Problem Scraping
-- [ ] AtCoder Submission & Polling
-- [ ] Language Mapping (Syncing internal IDs with OJ-specific IDs)
+- [x] AtCoder Problem Scraping
+- [x] AtCoder Submission & Polling
+- [x] Language Mapping (Syncing internal IDs with OJ-specific IDs)
 
 ### Phase 4: Contest Features
-- [ ] Real-time Live Leaderboard (Standings)
-- [ ] Participant Management (Join contest logic)
-- [ ] Contest Status Feed (Global/Participant attempts)
-- [ ] Clarification System (Jury/Participant messaging)
+- [x] Real-time Live Leaderboard (Standings)
+- [x] Participant Management (Join contest logic)
+- [x] Contest Status Feed (Global/Participant attempts)
+- [x] Discussion/Comment System (Real-time participant chat)
 
 ### Phase 5: Reliability & Refinement
 - [ ] "Custom Test" support via Extension

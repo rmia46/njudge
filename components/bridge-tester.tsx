@@ -71,7 +71,7 @@ export function BridgeTester() {
           </Alert>
         )}
 
-        <Alert variant="secondary" className="bg-slate-50 border-slate-200">
+        <Alert variant="default" className="bg-slate-50 border-slate-200">
           <Info className="h-4 w-4 text-slate-600" />
           <AlertTitle className="text-slate-800">How to test:</AlertTitle>
           <AlertDescription className="text-slate-700 text-xs">
