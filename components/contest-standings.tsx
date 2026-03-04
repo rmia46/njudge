@@ -11,19 +11,11 @@ import {
   TableRow 
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, User as UserIcon } from 'lucide-react'
-
-interface Standing {
-  userId: string
-  email: string
-  cfHandle?: string
-  solved: number
-  penalty: number
-  problems: Record<string, { solved: boolean, attempts: number, penalty: number }>
-}
+import { Loader2, User as UserIcon, Trophy } from 'lucide-react'
+import { calculateRankings, RankingResult, RankingRule } from '@/lib/ranking-engine'
 
 export function ContestStandings({ contest, problems }: { contest: any, problems: any[] }) {
-  const [standings, setStandings] = useState<Standing[]>([])
+  const [standings, setStandings] = useState<RankingResult[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -31,20 +23,33 @@ export function ContestStandings({ contest, problems }: { contest: any, problems
       // 1. Get Participants
       const { data: participants } = await supabase
         .from('participants')
-        .select('user_id, profiles(id, cf_handle), auth:user_id(email)') // Note: Auth access might need a different join or separate call depending on Supabase setup
+        .select('user_id')
+        .eq('contest_id', contest.id)
+
+      const participantIds = (participants || []).map(p => p.user_id)
       
-      // Since we can't join auth directly easily without specialized setup, let's just get profiles
+      // 2. Get Profiles
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, cf_handle')
+        .in('id', participantIds)
 
-      const { data: allSubmissions } = await supabase
+      // 3. Get Submissions
+      const { data: submissions } = await supabase
         .from('submissions')
         .select('*')
         .eq('contest_id', contest.id)
         .order('submitted_at', { ascending: true })
 
-      calculateStandings(profiles || [], allSubmissions || [])
+      const results = calculateRankings(
+        profiles || [],
+        submissions || [],
+        problems,
+        contest.start_time,
+        (contest.ranking_rule as RankingRule) || 'ICPC'
+      )
+
+      setStandings(results)
       setIsLoading(false)
     }
 
@@ -60,98 +65,66 @@ export function ContestStandings({ contest, problems }: { contest: any, problems
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [contest.id, problems])
+  }, [contest.id, problems, contest.ranking_rule, contest.start_time])
 
-  const calculateStandings = (profiles: any[], submissions: any[]) => {
-    const userMap: Record<string, Standing> = {}
-    
-    // Initialize map with profiles
-    profiles.forEach(p => {
-      userMap[p.id] = {
-        userId: p.id,
-        email: 'User', // Placeholder
-        cfHandle: p.cf_handle,
-        solved: 0,
-        penalty: 0,
-        problems: {}
-      }
-      problems.forEach(prob => {
-        userMap[p.id].problems[prob.id] = { solved: false, attempts: 0, penalty: 0 }
-      })
-    })
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary" /></div>
 
-    const contestStart = new Date(contest.start_time).getTime()
-
-    submissions.forEach(sub => {
-      if (!userMap[sub.user_id]) return // Should not happen if profile exists
-      
-      const probData = userMap[sub.user_id].problems[sub.problem_id]
-      if (probData.solved) return // Already solved
-
-      if (sub.verdict === 'OK' || sub.verdict === 'Accepted') {
-        probData.solved = true
-        const minutesSinceStart = Math.floor((new Date(sub.submitted_at).getTime() - contestStart) / 60000)
-        probData.penalty = minutesSinceStart + (probData.attempts * 20)
-        
-        userMap[sub.user_id].solved += 1
-        userMap[sub.user_id].penalty += probData.penalty
-      } else if (sub.verdict !== 'Judging' && sub.verdict !== 'In Queue' && sub.verdict !== 'Compilation Error') {
-        probData.attempts += 1
-      }
-    })
-
-    const sorted = Object.values(userMap).sort((a, b) => {
-      if (a.solved !== b.solved) return b.solved - a.solved
-      return a.penalty - b.penalty
-    })
-
-    setStandings(sorted)
-  }
-
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
+  const isICPC = contest.ranking_rule === 'ICPC'
 
   return (
-    <div className="rounded-md border bg-white overflow-hidden">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
       <Table>
-        <TableHeader className="bg-slate-50">
-          <TableRow>
-            <TableHead className="w-16 text-center">Rank</TableHead>
+        <TableHeader className="bg-muted/50">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="w-16 text-center font-bold">Rank</TableHead>
             <TableHead>Participant</TableHead>
-            <TableHead className="w-20 text-center">Solved</TableHead>
-            <TableHead className="w-24 text-center">Penalty</TableHead>
+            <TableHead className="w-20 text-center font-bold">Solved</TableHead>
+            <TableHead className="w-24 text-center font-bold">
+              {isICPC ? 'Penalty' : 'Score'}
+            </TableHead>
             {problems.map((p, i) => (
-              <TableHead key={p.id} className="text-center min-w-[80px]">
+              <TableHead key={p.id} className="text-center min-w-[80px] font-bold">
                 {String.fromCharCode(65 + i)}
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {standings.map((s, idx) => (
-            <TableRow key={s.userId}>
-              <TableCell className="text-center font-bold">{idx + 1}</TableCell>
+          {standings.map((s) => (
+            <TableRow key={s.userId} className="hover:bg-muted/30 transition-colors">
+              <TableCell className="text-center font-mono">
+                {s.rank === 1 ? <Trophy className="w-4 h-4 text-amber-500 mx-auto" /> : s.rank}
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <UserIcon className="w-4 h-4 text-slate-400" />
-                  <div>
-                    <div className="font-medium">{s.cfHandle || 'Anonymous'}</div>
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserIcon className="w-4 h-4 text-primary" />
                   </div>
+                  <span className="font-semibold">{s.cfHandle}</span>
                 </div>
               </TableCell>
-              <TableCell className="text-center font-bold text-lg text-emerald-600">{s.solved}</TableCell>
-              <TableCell className="text-center text-slate-500">{s.penalty}</TableCell>
+              <TableCell className="text-center font-bold text-lg text-primary">{s.solved}</TableCell>
+              <TableCell className="text-center font-mono text-sm text-muted-foreground">{s.score}</TableCell>
               {problems.map((p) => {
                 const prob = s.problems[p.id]
                 return (
-                  <TableCell key={p.id} className="text-center">
+                  <TableCell key={p.id} className="text-center p-2">
                     {prob.solved ? (
-                      <div className="flex flex-col items-center">
-                        <Badge className="bg-emerald-500 hover:bg-emerald-600">+{prob.attempts > 0 ? prob.attempts : ''}</Badge>
-                        <span className="text-[10px] text-slate-500 mt-1">{prob.penalty}</span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <Badge className="bg-verdict-ac hover:bg-verdict-ac border-0 shadow-sm px-2 py-0 h-6">
+                          +{prob.attempts > 0 ? prob.attempts : ''}
+                        </Badge>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {isICPC ? prob.penalty : prob.points}
+                        </span>
                       </div>
                     ) : prob.attempts > 0 ? (
-                      <Badge variant="destructive" className="bg-rose-500">-{prob.attempts}</Badge>
-                    ) : '-'}
+                      <Badge className="bg-verdict-wa hover:bg-verdict-wa border-0 shadow-sm px-2 py-0 h-6">
+                        -{prob.attempts}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground/30">-</span>
+                    )}
                   </TableCell>
                 )
               })}
@@ -159,8 +132,11 @@ export function ContestStandings({ contest, problems }: { contest: any, problems
           ))}
           {standings.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4 + problems.length} className="text-center py-12 text-muted-foreground">
-                No participants yet.
+              <TableCell colSpan={4 + problems.length} className="text-center py-16 text-muted-foreground">
+                <div className="flex flex-col items-center gap-2">
+                  <UserIcon className="w-8 h-8 opacity-20" />
+                  <p>Wait for the first submission!</p>
+                </div>
               </TableCell>
             </TableRow>
           )}

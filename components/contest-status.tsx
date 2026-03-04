@@ -10,7 +10,8 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table'
-import { Loader2, ExternalLink, Clock } from 'lucide-react'
+import { Loader2, ExternalLink, Clock, User as UserIcon, Code, Eye } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
 export function ContestStatus({ contestId, problems }: { contestId: string, problems: any[] }) {
   const [submissions, setSubmissions] = useState<any[]>([])
@@ -48,66 +49,87 @@ export function ContestStatus({ contestId, problems }: { contestId: string, prob
     return () => { supabase.removeChannel(channel) }
   }, [contestId])
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary" /></div>
+
+  const getVerdictStyle = (verdict: string) => {
+    if (verdict === 'OK' || verdict === 'Accepted') return 'bg-verdict-ac text-verdict-ac-foreground shadow-sm shadow-emerald-500/20'
+    if (verdict === 'In Queue' || verdict === 'Judging') return 'bg-verdict-judging text-verdict-judging-foreground animate-pulse'
+    if (verdict === 'Wrong Answer') return 'bg-verdict-wa text-verdict-wa-foreground'
+    if (verdict === 'Time Limit Exceeded') return 'bg-verdict-tle text-verdict-tle-foreground'
+    if (verdict === 'Runtime Error') return 'bg-verdict-re text-verdict-re-foreground'
+    return 'bg-verdict-ce text-verdict-ce-foreground'
+  }
 
   return (
-    <div className="rounded-md border bg-white overflow-hidden">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
       <Table>
-        <TableHeader className="bg-slate-50">
-          <TableRow>
-            <TableHead className="w-20">ID</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead>Problem</TableHead>
-            <TableHead>Language</TableHead>
-            <TableHead className="text-right">Verdict</TableHead>
+        <TableHeader className="bg-muted/50">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="w-24 text-center font-bold">ID</TableHead>
+            <TableHead className="font-bold">Time</TableHead>
+            <TableHead className="font-bold">User</TableHead>
+            <TableHead className="font-bold">Problem</TableHead>
+            <TableHead className="font-bold">Language</TableHead>
+            <TableHead className="text-right font-bold">Verdict</TableHead>
+            <TableHead className="w-16"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {submissions.map((sub) => (
-            <TableRow key={sub.id}>
-              <TableCell className="font-mono text-xs text-slate-400">
-                {sub.id.slice(0, 8)}
+            <TableRow key={sub.id} className="hover:bg-muted/30 transition-colors group">
+              <TableCell className="font-mono text-[11px] text-muted-foreground text-center">
+                #{sub.id.slice(0, 8)}
               </TableCell>
-              <TableCell className="whitespace-nowrap text-xs">
-                <div className="flex items-center gap-1 text-slate-500">
+              <TableCell className="whitespace-nowrap">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="w-3 h-3" />
                   {new Date(sub.submitted_at).toLocaleTimeString()}
                 </div>
               </TableCell>
-              <TableCell className="font-medium">
-                {sub.profiles?.cf_handle || 'Anonymous'}
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                    <UserIcon className="w-3 h-3 text-slate-500" />
+                  </div>
+                  <span className="font-medium text-sm">{sub.profiles?.cf_handle || 'Anonymous'}</span>
+                </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                   <span className="font-bold text-emerald-700">
+                   <Badge variant="outline" className="font-bold border-emerald-200 text-emerald-700 bg-emerald-50 px-1.5 h-6">
                      {problemMap[sub.problem_id] ? String.fromCharCode(65 + problems.findIndex(p => p.id === sub.problem_id)) : '?'}
-                   </span>
-                   <span className="text-sm truncate max-w-[150px]">
+                   </Badge>
+                   <span className="text-sm truncate max-w-[150px] group-hover:underline cursor-pointer">
                      {problemMap[sub.problem_id]?.title || 'Unknown'}
                    </span>
                 </div>
               </TableCell>
-              <TableCell className="text-xs text-slate-600">
-                {sub.language === '54' || sub.language === '80' || sub.language === '5001' ? 'C++' : 
-                 sub.language === '70' || sub.language === '5055' ? 'Python' : 
-                 sub.language === '75' || sub.language === '5005' ? 'Java' : sub.language}
+              <TableCell>
+                <Badge variant="secondary" className="text-[10px] font-mono font-normal tracking-tight px-1.5 h-6">
+                  {sub.language === '54' || sub.language === '80' || sub.language === '5001' ? 'C++20' : 
+                   sub.language === '70' || sub.language === '5055' ? 'Python 3' : 
+                   sub.language === '75' || sub.language === '5005' ? 'Java 21' : sub.language}
+                </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <span className={`px-2 py-1 rounded text-xs font-bold ${
-                  sub.verdict === 'OK' || sub.verdict === 'Accepted' ? 'bg-emerald-100 text-emerald-700' : 
-                  sub.verdict === 'In Queue' || sub.verdict === 'Judging' ? 'bg-blue-100 text-blue-700 animate-pulse' :
-                  'bg-rose-100 text-rose-700'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-[11px] font-bold inline-block min-w-[100px] text-center ${getVerdictStyle(sub.verdict)}`}>
                   {sub.verdict}
                 </span>
+              </TableCell>
+              <TableCell className="text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
+                  <Eye className="w-4 h-4" />
+                </button>
               </TableCell>
             </TableRow>
           ))}
           {submissions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                No submissions yet.
+              <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
+                <div className="flex flex-col items-center gap-2 opacity-30">
+                  <Code className="w-10 h-10" />
+                  <p>Wait for participants to code!</p>
+                </div>
               </TableCell>
             </TableRow>
           )}
