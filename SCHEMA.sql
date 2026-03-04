@@ -63,6 +63,9 @@ CREATE TABLE IF NOT EXISTS contests (
   duration_minutes INTEGER NOT NULL,
   owner_id UUID REFERENCES auth.users(id),
   is_practice BOOLEAN DEFAULT FALSE,
+  is_private BOOLEAN DEFAULT FALSE,
+  password TEXT,
+  ranking_rule TEXT DEFAULT 'ICPC' CHECK (ranking_rule IN ('ICPC', 'AtCoder', 'IOI')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
