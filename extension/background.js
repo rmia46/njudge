@@ -23,8 +23,85 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  if (request.type === 'NJUDGE_CUSTOM_TEST') {
+    handleCustomTest(request.payload)
+      .then(data => sendResponse({ status: 'success', data }))
+      .catch(error => sendResponse({ status: 'error', message: error.message }));
+    return true;
+  }
+
   return true;
 });
+
+async function handleCustomTest({ oj, code, languageId, input }) {
+  if (oj === 'CF') {
+    const customTestUrl = 'https://codeforces.com/customtest';
+    
+    // 1. Get CSRF
+    const getResp = await fetch(customTestUrl);
+    const getHtml = await getResp.text();
+    const csrfMatch = getHtml.match(/data-csrf='(.+?)'/);
+    if (!csrfMatch) throw new Error('Could not find CSRF token. Log into Codeforces.');
+    const csrfToken = csrfMatch[1];
+
+    // 2. Submit
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken);
+    formData.append('ftaa', '');
+    formData.append('bfaa', '');
+    formData.append('action', 'submitSolutionFormSubmitted');
+    formData.append('programTypeId', languageId);
+    formData.append('source', code);
+    formData.append('input', input);
+    formData.append('_tta', '37');
+
+    const postResp = await fetch(customTestUrl, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!postResp.ok) throw new Error('Failed to submit custom test');
+
+    // 3. Poll for result
+    return pollCFCustomTest(csrfToken);
+  }
+  throw new Error('Custom test only supported for Codeforces currently');
+}
+
+async function pollCFCustomTest(csrfToken) {
+  const customTestUrl = 'https://codeforces.com/customtest';
+  let attempts = 0;
+  
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > 30) {
+        clearInterval(interval);
+        reject(new Error('Custom test timed out'));
+      }
+
+      try {
+        const resp = await fetch(customTestUrl);
+        const html = await resp.text();
+        
+        // CF custom test results are often loaded via a side request or present in the HTML after refresh
+        // For simplicity, we check if the output area has changed from "Empty"
+        const outputMatch = html.match(/<div id="output"[\s\S]*?><pre>([\s\S]*?)<\/pre>/);
+        if (outputMatch && outputMatch[1].trim() !== '' && !outputMatch[1].includes('Running')) {
+          const timeMatch = html.match(/Time: (\d+) ms/);
+          const memoryMatch = html.match(/Memory: (\d+) KB/);
+          
+          clearInterval(interval);
+          resolve({
+            output: outputMatch[1].trim(),
+            time: timeMatch ? timeMatch[1] : '0',
+            memory: memoryMatch ? memoryMatch[1] : '0'
+          });
+        }
+      } catch (e) { console.error('Poll error:', e); }
+    }, 2000);
+  });
+}
 
 async function handleScrapeProblem({ oj, id }) {
   if (oj === 'CF') {
