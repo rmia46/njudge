@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "nJudge Bridge",
+  "name": "nJudge Bridge (Firefox)",
   "version": "1.0.0",
   "description": "Bridge between nJudge and Online Judges (Codeforces/AtCoder)",
   "permissions": [
@@ -11,7 +11,12 @@
     "https://atcoder.jp/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bridge@njudge.app"
+    }
   },
   "content_scripts": [
     {

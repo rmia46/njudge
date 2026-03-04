@@ -45,10 +45,33 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
             <Link href="/contests" className="hover:text-emerald-600 transition-colors">Contests</Link>
             <Link href="/problems" className="hover:text-emerald-600 transition-colors">Problems</Link>
+            <Link href="/extension" className="hover:text-emerald-600 transition-colors flex items-center gap-1.5">
+              Bridge
+              <span className="flex h-2 w-2 rounded-full bg-slate-300" id="extension-status-dot"></span>
+            </Link>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
+          <script dangerouslySetInnerHTML={{ __html: `
+            (function() {
+              const check = () => {
+                const requestId = Math.random().toString(36).substring(7);
+                const handleResponse = (e) => {
+                  if (e.data && e.data.type === 'NJUDGE_PING_RESPONSE' && e.data.requestId === requestId) {
+                    const dot = document.getElementById('extension-status-dot');
+                    if (dot) dot.className = 'flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+                    window.removeEventListener('message', handleResponse);
+                  }
+                };
+                window.addEventListener('message', handleResponse);
+                window.postMessage({ type: 'NJUDGE_PING', requestId }, '*');
+                setTimeout(() => window.removeEventListener('message', handleResponse), 1000);
+              };
+              setTimeout(check, 1000);
+              setInterval(check, 10000);
+            })();
+          `}} />
           {user ? (
             <>
               <Button variant="ghost" size="sm" asChild className="hidden sm:flex">

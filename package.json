@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "npm run build:extension && next dev",
+    "build": "npm run build:extension && next build",
+    "build:extension": "mkdir -p public/extension && cp extension/*.js public/extension/ && cp extension/manifest.json public/extension/manifest.json && cd public/extension && zip -r ../njudge-extension-chrome.zip . -x 'manifest.firefox.json' && cd ../.. && cp extension/manifest.firefox.json public/extension/manifest.json && cd public/extension && zip -r ../njudge-extension-firefox.zip . && cd ../.. && rm -rf public/extension",
     "start": "next start",
     "lint": "eslint"
   },
