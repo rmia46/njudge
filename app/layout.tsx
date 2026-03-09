@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
+import { Toaster } from "sonner";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={`${figtree.variable} antialiased min-h-screen bg-slate-50/30`}>
         <Navbar />
         {children}
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

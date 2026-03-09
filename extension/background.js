@@ -122,13 +122,22 @@ async function handleScrapeProblem({ oj, id }) {
         try {
           const response = await fetch(targetUrl);
           if (!response.ok) continue;
+          
+          // CRITICAL: Check if the final URL actually contains our ID. 
+          // Codeforces often redirects to a "home" or "similar" page if problem not found.
+          const finalUrl = response.url;
+          if (!finalUrl.includes(contestId) || !finalUrl.toLowerCase().includes(problemIndex.toLowerCase())) {
+            console.warn('Background: CF Redirect detected, ID mismatch', finalUrl, id);
+            continue;
+          }
+
           const html = await response.text();
           
           // 1. Try div.title first (usually most precise)
           const divMatch = html.match(/<div class="title">(.+?)<\/div>/);
           if (divMatch) {
             const title = divMatch[1].replace(/^[A-Z]\d*\.\s+/, '').trim();
-            return { title, url: targetUrl };
+            return { title, url: finalUrl };
           }
 
           // 2. Fallback to <title>
@@ -137,11 +146,11 @@ async function handleScrapeProblem({ oj, id }) {
             let title = titleTagMatch[1].replace(/- Codeforces/i, '').trim();
             title = title.replace(/^[A-Z]\d*\.\s+/, '').trim();
             title = title.replace(/^Problem\s+-\s+\d+[A-Z]\d*\s+-\s+/i, '').trim();
-            return { title, url: targetUrl };
+            return { title, url: finalUrl };
           }
         } catch (e) { console.error('CF URL attempt failed', e); }
       }
-      throw new Error('Could not find problem title on Codeforces');
+      throw new Error('Problem Not Found');
     }
     
     if (oj === 'AC') {
