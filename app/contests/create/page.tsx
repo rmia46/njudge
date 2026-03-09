@@ -29,26 +29,66 @@ export default function CreateContest() {
   const [problems, setProblems] = useState<ProblemInput[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [scrapingIndex, setScrapingIndex] = useState<number | null>(null)
+  const [scrapedIds, setScrapedIds] = useState<Record<number, string>>({})
+
+  // Auto-scrape when external_id changes
+  useEffect(() => {
+    // 1. Only one scrape at a time
+    if (scrapingIndex !== null) return;
+
+    // 2. Find the first problem that needs scraping
+    const targetIndex = problems.findIndex((prob, index) => {
+      if (!prob.external_id) return false;
+      if (prob.title) return false; // Already has a title
+      if (scrapedIds[index] === prob.external_id) return false; // Already tried/succeeded this ID
+
+      const isCF = prob.oj === 'CF' && /^\d+[A-Z]\d*$/.test(prob.external_id);
+      const isAC = prob.oj === 'AC' && /^[a-z0-9]+_[a-z0-9]+$/.test(prob.external_id);
+      return isCF || isAC;
+    });
+
+    if (targetIndex !== -1) {
+      console.log('Auto-scraping index:', targetIndex, 'for ID:', problems[targetIndex].external_id);
+      
+      // Update tracking BEFORE calling to prevent instant re-trigger
+      setScrapedIds(prev => ({ ...prev, [targetIndex]: problems[targetIndex].external_id }));
+      scrapeProblem(targetIndex);
+    }
+  }, [problems, scrapingIndex, scrapedIds])
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== window) return
       if (event.data && event.data.type === 'NJUDGE_SCRAPE_PROBLEM_RESPONSE') {
-        const { status, data, requestId } = event.data.payload
+        const { payload, requestId } = event.data;
+        if (!payload) return;
+
+        const { status, data, message } = payload;
         const index = parseInt(requestId)
+        
+        console.log('nJudge Bridge [App]: Scrape response for index', index, ':', status);
         
         if (status === 'success' && !isNaN(index)) {
           setProblems(prev => {
             const next = [...prev]
-            next[index] = { 
-              ...next[index], 
-              title: data.title,
-              url: data.url
+            if (next[index]) {
+              next[index] = { ...next[index], title: data.title, url: data.url };
             }
-            return next
+            return next;
           })
+        } else if (status === 'error') {
+          console.error('nJudge Bridge [App]: Scrape error:', message);
+          if (!isNaN(index)) {
+            setProblems(prev => {
+              const next = [...prev]
+              if (next[index]) {
+                next[index] = { ...next[index], title: 'Problem Not Found', url: '' };
+              }
+              return next;
+            })
+          }
         }
-        setScrapingIndex(null)
+        setScrapingIndex(null);
       }
     }
 

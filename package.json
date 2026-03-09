@@ -6,6 +6,8 @@
     "dev": "npm run build:extension && next dev",
     "build": "npm run build:extension && next build",
     "build:extension": "mkdir -p public/extension && cp extension/*.js public/extension/ && cp extension/manifest.json public/extension/manifest.json && cd public/extension && zip -r ../njudge-extension-chrome.zip . -x 'manifest.firefox.json' && cd ../.. && cp extension/manifest.firefox.json public/extension/manifest.json && cd public/extension && zip -r ../njudge-extension-firefox.zip . && cd ../.. && rm -rf public/extension",
+    "dev:extension:chrome": "web-ext run --source-dir extension --target chromium",
+    "dev:extension:firefox": "web-ext run --source-dir extension --target firefox-desktop",
     "start": "next start",
     "lint": "eslint"
   },
@@ -33,6 +35,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "web-ext": "^9.4.0"
   }
 }

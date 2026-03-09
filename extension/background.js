@@ -104,38 +104,82 @@ async function pollCFCustomTest(csrfToken) {
 }
 
 async function handleScrapeProblem({ oj, id }) {
-  if (oj === 'CF') {
-    const match = id.match(/^(\d+)([A-Z]\d*)$/);
-    if (!match) throw new Error('Invalid Codeforces Problem ID format (e.g., 123A)');
-    
-    const contestId = match[1];
-    const problemIndex = match[2];
-    const targetUrl = `https://codeforces.com/contest/${contestId}/problem/${problemIndex}`;
+  console.log('Background: Scraping problem', oj, id);
+  try {
+    if (oj === 'CF') {
+      const match = id.match(/^(\d+)([A-Z]\d*)$/);
+      if (!match) throw new Error('Invalid Codeforces Problem ID format (e.g., 123A)');
+      
+      const contestId = match[1];
+      const problemIndex = match[2];
+      
+      const urls = [
+        `https://codeforces.com/contest/${contestId}/problem/${problemIndex}`,
+        `https://codeforces.com/problemset/problem/${contestId}/${problemIndex}`
+      ];
 
-    const response = await fetch(targetUrl);
-    const html = await response.text();
-    
-    const titleMatch = html.match(/<div class="title">(.+?)<\/div>/);
-    const title = titleMatch ? titleMatch[1].replace(/^[A-Z]\.\s+/, '') : 'Unknown Title';
+      for (const targetUrl of urls) {
+        try {
+          const response = await fetch(targetUrl);
+          if (!response.ok) continue;
+          const html = await response.text();
+          
+          // 1. Try div.title first (usually most precise)
+          const divMatch = html.match(/<div class="title">(.+?)<\/div>/);
+          if (divMatch) {
+            const title = divMatch[1].replace(/^[A-Z]\d*\.\s+/, '').trim();
+            return { title, url: targetUrl };
+          }
 
-    return { title, url: targetUrl };
-  }
-  
-  if (oj === 'AC') {
-    // AtCoder ID format: abc344_a
-    const match = id.match(/^([a-z0-9]+)_([a-z0-9]+)$/);
-    if (!match) throw new Error('Invalid AtCoder Problem ID format (e.g., abc344_a)');
+          // 2. Fallback to <title>
+          const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
+          if (titleTagMatch) {
+            let title = titleTagMatch[1].replace(/- Codeforces/i, '').trim();
+            title = title.replace(/^[A-Z]\d*\.\s+/, '').trim();
+            title = title.replace(/^Problem\s+-\s+\d+[A-Z]\d*\s+-\s+/i, '').trim();
+            return { title, url: targetUrl };
+          }
+        } catch (e) { console.error('CF URL attempt failed', e); }
+      }
+      throw new Error('Could not find problem title on Codeforces');
+    }
     
-    const contestId = match[1];
-    const targetUrl = `https://atcoder.jp/contests/${contestId}/tasks/${id}`;
+    if (oj === 'AC') {
+      const match = id.match(/^([a-z0-9]+)_([a-z0-9]+)$/);
+      if (!match) throw new Error('Invalid AtCoder Problem ID format (e.g., abc344_a)');
+      
+      const contestId = match[1];
+      const targetUrl = `https://atcoder.jp/contests/${contestId}/tasks/${id}`;
 
-    const response = await fetch(targetUrl);
-    const html = await response.text();
-    
-    const titleMatch = html.match(/<span class="h2">[\s\S]*?-\s*(.+?)<\/span>/);
-    const title = titleMatch ? titleMatch[1].trim() : 'Unknown Title';
+      console.log('Background: Fetching AC URL', targetUrl);
+      const response = await fetch(targetUrl);
+      if (!response.ok) throw new Error(`AtCoder returned ${response.status}`);
+      const html = await response.text();
+      
+      // Use <title> tag - it's much cleaner in AtCoder
+      // Format: "A - Spoiler - AtCoder Beginner Contest 344"
+      const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
+      if (titleTagMatch) {
+        const parts = titleTagMatch[1].split(' - ');
+        if (parts.length >= 2) {
+          // Index 1 is usually the actual problem title
+          const title = parts[1].trim();
+          console.log('Background: Found AC title via <title> tag:', title);
+          return { title, url: targetUrl };
+        }
+      }
 
-    return { title, url: targetUrl };
+      // Final fallback to old method but with cleaner regex
+      const spanMatch = html.match(/<span class="h2">\s*[A-Z0-9]*\s*-\s*([^<]+)<\/span>/i);
+      if (spanMatch) {
+        return { title: spanMatch[1].trim(), url: targetUrl };
+      }
+      
+      return { title: 'Unknown Title', url: targetUrl };
+    }
+  } catch (err) {
+    console.error('Background: Scrape error:', err);
+    throw err;
   }
   
   throw new Error('Unsupported OJ or invalid payload');
