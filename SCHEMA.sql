@@ -97,6 +97,7 @@ CREATE POLICY "Public read contests" ON contests FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can create contests" ON contests FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 CREATE POLICY "Public read problems" ON problems FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create problems" ON problems FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 CREATE POLICY "Public read participants" ON participants FOR SELECT USING (true);
 CREATE POLICY "Users can join contests" ON participants FOR INSERT WITH CHECK (auth.uid() = user_id);
