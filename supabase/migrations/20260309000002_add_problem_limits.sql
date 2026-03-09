@@ -1,0 +1,2 @@
+ALTER TABLE problems ADD COLUMN IF NOT EXISTS time_limit TEXT;
+ALTER TABLE problems ADD COLUMN IF NOT EXISTS memory_limit TEXT;

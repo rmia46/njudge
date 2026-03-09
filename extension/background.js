@@ -123,8 +123,6 @@ async function handleScrapeProblem({ oj, id }) {
           const response = await fetch(targetUrl);
           if (!response.ok) continue;
           
-          // CRITICAL: Check if the final URL actually contains our ID. 
-          // Codeforces often redirects to a "home" or "similar" page if problem not found.
           const finalUrl = response.url;
           if (!finalUrl.includes(contestId) || !finalUrl.toLowerCase().includes(problemIndex.toLowerCase())) {
             console.warn('Background: CF Redirect detected, ID mismatch', finalUrl, id);
@@ -133,20 +131,45 @@ async function handleScrapeProblem({ oj, id }) {
 
           const html = await response.text();
           
-          // 1. Try div.title first (usually most precise)
+          // 1. Title
           const divMatch = html.match(/<div class="title">(.+?)<\/div>/);
+          let title = '';
           if (divMatch) {
-            const title = divMatch[1].replace(/^[A-Z]\d*\.\s+/, '').trim();
-            return { title, url: finalUrl };
+            title = divMatch[1].replace(/^[A-Z]\d*\.\s+/, '').trim();
+          } else {
+            const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
+            if (titleTagMatch) {
+              title = titleTagMatch[1].replace(/- Codeforces/i, '').trim();
+              title = title.replace(/^[A-Z]\d*\.\s+/, '').trim();
+              title = title.replace(/^Problem\s+-\s+\d+[A-Z]\d*\s+-\s+/i, '').trim();
+            }
           }
 
-          // 2. Fallback to <title>
-          const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
-          if (titleTagMatch) {
-            let title = titleTagMatch[1].replace(/- Codeforces/i, '').trim();
-            title = title.replace(/^[A-Z]\d*\.\s+/, '').trim();
-            title = title.replace(/^Problem\s+-\s+\d+[A-Z]\d*\s+-\s+/i, '').trim();
-            return { title, url: finalUrl };
+          // 2. Statement & Metadata (Codeforces)
+          let statementHtml = '';
+          let timeLimit = '1.0 second';
+          let memoryLimit = '256 megabytes';
+
+          const statementMatch = html.match(/<div class="problem-statement">([\s\S]*?)<\/div>\s*<script/);
+          if (statementMatch) {
+            statementHtml = statementMatch[1];
+            
+            // Extract metadata from headers
+            const tMatch = statementHtml.match(/<div class="time-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
+            const mMatch = statementHtml.match(/<div class="memory-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
+            
+            if (tMatch) timeLimit = tMatch[1].trim();
+            if (mMatch) memoryLimit = mMatch[1].trim();
+
+            // Remove the header
+            statementHtml = statementHtml.replace(/<div class="header">[\s\S]*?<\/div>/, '');
+          } else {
+            const fallbackMatch = html.match(/<div class="title">[\s\S]*?<\/div>([\s\S]*?)<div class="sample-tests">/);
+            if (fallbackMatch) statementHtml = fallbackMatch[1];
+          }
+
+          if (title) {
+            return { title, url: finalUrl, statementHtml, timeLimit, memoryLimit };
           }
         } catch (e) { console.error('CF URL attempt failed', e); }
       }
@@ -165,26 +188,39 @@ async function handleScrapeProblem({ oj, id }) {
       if (!response.ok) throw new Error(`AtCoder returned ${response.status}`);
       const html = await response.text();
       
-      // Use <title> tag - it's much cleaner in AtCoder
-      // Format: "A - Spoiler - AtCoder Beginner Contest 344"
+      // 1. Title
+      let title = 'Unknown Title';
       const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
       if (titleTagMatch) {
         const parts = titleTagMatch[1].split(' - ');
-        if (parts.length >= 2) {
-          // Index 1 is usually the actual problem title
-          const title = parts[1].trim();
-          console.log('Background: Found AC title via <title> tag:', title);
-          return { title, url: targetUrl };
-        }
+        if (parts.length >= 2) title = parts[1].trim();
       }
 
-      // Final fallback to old method but with cleaner regex
-      const spanMatch = html.match(/<span class="h2">\s*[A-Z0-9]*\s*-\s*([^<]+)<\/span>/i);
-      if (spanMatch) {
-        return { title: spanMatch[1].trim(), url: targetUrl };
-      }
+      // 2. Statement & Metadata (AtCoder)
+      let statementHtml = '';
+      let timeLimit = '2.0 sec';
+      let memoryLimit = '1024 MB';
+
+      const statementMatch = html.match(/<div id="task-statement">([\s\S]*?)<span class="lang-jp">/);
+      const fallbackStatementMatch = html.match(/<div id="task-statement">([\s\S]*?)<\/div>\s*<div class="button-pannel">/);
+      const simpleStatementMatch = html.match(/<div id="task-statement">([\s\S]*?)<\/div>/);
       
-      return { title: 'Unknown Title', url: targetUrl };
+      if (statementMatch) statementHtml = statementMatch[1];
+      else if (fallbackStatementMatch) statementHtml = fallbackStatementMatch[1];
+      else if (simpleStatementMatch) statementHtml = simpleStatementMatch[1];
+
+      // Extract AtCoder limits from the page text
+      const acLimitMatch = html.match(/Time Limit: (.*?) \/ Memory Limit: (.*?)<\/p>/);
+      if (acLimitMatch) {
+        timeLimit = acLimitMatch[1].trim();
+        memoryLimit = acLimitMatch[2].trim();
+      }
+
+      // Clean up AC statement
+      statementHtml = statementHtml.replace(/<span class="lang-en">([\s\S]*?)<\/span>/, '$1');
+      statementHtml = statementHtml.replace(/<span class="lang-ja">[\s\S]*?<\/span>/g, '');
+      
+      return { title, url: targetUrl, statementHtml, timeLimit, memoryLimit };
     }
   } catch (err) {
     console.error('Background: Scrape error:', err);

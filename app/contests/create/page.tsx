@@ -20,6 +20,9 @@ interface ProblemInput {
   external_id: string
   title: string
   url: string
+  statementHtml?: string
+  timeLimit?: string
+  memoryLimit?: string
 }
 
 export default function CreateContest() {
@@ -79,7 +82,14 @@ export default function CreateContest() {
           setProblems(prev => {
             const next = [...prev]
             if (next[index]) {
-              next[index] = { ...next[index], title: data.title, url: data.url };
+              next[index] = { 
+                ...next[index], 
+                title: data.title, 
+                url: data.url,
+                statementHtml: data.statementHtml,
+                timeLimit: data.timeLimit,
+                memoryLimit: data.memoryLimit
+              };
             }
             return next;
           })
@@ -176,7 +186,10 @@ export default function CreateContest() {
         oj: p.oj,
         external_id: p.external_id,
         title: p.title,
-        problem_url: p.url
+        problem_url: p.url,
+        statement_html: p.statementHtml,
+        time_limit: p.timeLimit,
+        memory_limit: p.memoryLimit
       }))
 
       const { error: problemsError } = await supabase

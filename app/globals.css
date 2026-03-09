@@ -174,3 +174,55 @@
     @apply bg-background text-foreground transition-colors duration-300;
   }
 }
+
+/* Problem Statement Styling */
+.problem-statement {
+  @apply text-[15px] leading-relaxed;
+}
+
+.problem-statement .section-title {
+  @apply text-xl font-bold text-primary mt-8 mb-3 border-b-2 border-primary/10 pb-1 uppercase tracking-tight;
+}
+
+.problem-statement p {
+  @apply mb-4;
+}
+
+/* Sample Tests Styling */
+.sample-tests {
+  @apply mt-8 space-y-6;
+}
+
+.sample-test {
+  @apply border-2 rounded-xl overflow-hidden bg-muted/30;
+}
+
+.sample-test .input, .sample-test .output {
+  @apply p-0;
+}
+
+.sample-test .title {
+  @apply bg-muted px-4 py-2 text-xs font-black uppercase tracking-widest border-b;
+}
+
+.sample-test pre {
+  @apply p-4 font-mono text-sm m-0 bg-transparent overflow-x-auto whitespace-pre-wrap;
+}
+
+/* MathJax / Latex specific fixes */
+.math {
+  @apply font-serif italic;
+}
+
+/* AtCoder specific sections */
+#task-statement section {
+  @apply mb-8;
+}
+
+#task-statement h3 {
+  @apply text-xl font-bold text-primary mt-8 mb-3 border-b-2 border-primary/10 pb-1 uppercase tracking-tight;
+}
+
+#task-statement pre {
+  @apply p-4 font-mono text-sm bg-muted/50 rounded-xl border-2 border-dashed;
+}

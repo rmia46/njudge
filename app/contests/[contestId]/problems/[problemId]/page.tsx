@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '@/lib/supabase'
-import { Loader2, ExternalLink, Save, Play, Send, History, FileText, ChevronRight } from 'lucide-react'
+import { Loader2, ExternalLink, Save, Play, Send, History, FileText, ChevronRight, Clock, BarChart3 } from 'lucide-react'
 import Editor from '@monaco-editor/react'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
+import { ProblemStatement } from '@/components/problem-statement'
 
 const LANGUAGE_MAP: Record<string, string> = {
   '54': 'cpp',
@@ -212,15 +213,26 @@ export default function ProblemPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="bg-muted px-3 py-1.5 rounded-lg text-xs font-bold border">TIME: 1.0s</div>
-                  <div className="bg-muted px-3 py-1.5 rounded-lg text-xs font-bold border">MEM: 256MB</div>
+                <div className="flex flex-wrap gap-3">
+                  <div className="bg-primary/5 px-4 py-2 rounded-xl text-xs font-black border-2 border-primary/10 flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                    TIME: <span className="text-primary">{problem.time_limit || '1.0s'}</span>
+                  </div>
+                  <div className="bg-primary/5 px-4 py-2 rounded-xl text-xs font-black border-2 border-primary/10 flex items-center gap-2">
+                    <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                    MEM: <span className="text-primary">{problem.memory_limit || '256MB'}</span>
+                  </div>
                 </div>
-                <div className="prose prose-slate dark:prose-invert max-w-none">
-                  <p className="text-muted-foreground leading-relaxed italic">
-                    Problem statement is available on the original platform. Click the "Original" button to read the full description, examples, and constraints.
-                  </p>
-                </div>
+                
+                {problem.statement_html ? (
+                  <ProblemStatement html={problem.statement_html} oj={problem.oj} />
+                ) : (
+                  <div className="prose prose-slate dark:prose-invert max-w-none">
+                    <p className="text-muted-foreground leading-relaxed italic">
+                      Problem statement is available on the original platform. Click the "Original" button to read the full description, examples, and constraints.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
