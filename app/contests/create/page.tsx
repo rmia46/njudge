@@ -280,21 +280,18 @@ export default function CreateContest() {
                         onChange={e => {
                           const newProbs = [...problems]
                           newProbs[index].external_id = e.target.value
+                          // Clear title when ID is being edited so it can re-scrape
+                          newProbs[index].title = ''
                           setProblems(newProbs)
                         }} 
                         placeholder="e.g. 123A"
                         className="h-10 pr-10"
                       />
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute right-1 top-1 h-8 w-8 hover:bg-primary/10 hover:text-primary"
-                        onClick={() => scrapeProblem(index)}
-                        disabled={scrapingIndex === index || !prob.external_id}
-                      >
-                        {scrapingIndex === index ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <Search className="w-4 h-4" />}
-                      </Button>
+                      {scrapingIndex === index && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -302,13 +299,14 @@ export default function CreateContest() {
                     <Label className="text-xs uppercase tracking-wider font-bold opacity-50">Title</Label>
                     <Input 
                       value={prob.title} 
+                      readOnly
                       onChange={e => {
                         const newProbs = [...problems]
                         newProbs[index].title = e.target.value
                         setProblems(newProbs)
                       }} 
-                      placeholder="Scrape with search icon..."
-                      className="h-10"
+                      placeholder={scrapingIndex === index ? "Fetching..." : "Title will load automatically..."}
+                      className={`h-10 transition-colors ${prob.title === 'Problem Not Found' ? 'text-destructive font-bold' : ''}`}
                     />
                   </div>
 
