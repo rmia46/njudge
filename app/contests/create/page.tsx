@@ -27,13 +27,28 @@ interface ProblemInput {
 
 export default function CreateContest() {
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
+
+  // Auth Check & Protection
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error("Sign in to organize a contest")
+        router.push('/login')
+      } else {
+        setUser(user)
+      }
+      setIsAuthLoading(false)
+    }
+    checkUser()
+  }, [router])
+
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  
-  // Date and Time split
   const [startDate, setStartDate] = useState<Date | undefined>(new Date())
   const [startTimeStr, setStartTimeStr] = useState('12:00')
-  
   const [duration, setDuration] = useState('120')
   const [isPrivate, setIsPrivate] = useState(false)
   const [password, setPassword] = useState('')
@@ -43,15 +58,11 @@ export default function CreateContest() {
   const [scrapingIndex, setScrapingIndex] = useState<number | null>(null)
   const [scrapedIds, setScrapedIds] = useState<Record<number, string>>({})
 
-  // Auto-scrape when external_id changes
+  // Auto-scrape logic
   useEffect(() => {
     if (scrapingIndex !== null) return;
-
     const targetIndex = problems.findIndex((prob, index) => {
-      if (!prob.external_id) return false;
-      if (prob.title) return false; 
-      if (scrapedIds[index] === prob.external_id) return false;
-
+      if (!prob.external_id || prob.title || scrapedIds[index] === prob.external_id) return false;
       const isCF = prob.oj === 'CF' && /^\d+[A-Z]\d*$/.test(prob.external_id);
       const isAC = prob.oj === 'AC' && /^[a-z0-9]+_[a-z0-9]+$/.test(prob.external_id);
       return isCF || isAC;
@@ -70,49 +81,34 @@ export default function CreateContest() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.source !== window) return
-      if (event.data && event.data.type === 'NJUDGE_SCRAPE_PROBLEM_RESPONSE') {
-        const { payload, requestId } = event.data;
-        if (!payload) return;
-
-        const { status, data, message } = payload;
-        const index = parseInt(requestId)
-        
-        if (status === 'success' && !isNaN(index)) {
-          setProblems(prev => {
-            const next = [...prev]
-            if (next[index]) {
-              next[index] = { 
-                ...next[index], 
-                title: data.title, 
-                url: data.url,
-                statementHtml: data.statementHtml,
-                timeLimit: data.timeLimit,
-                memoryLimit: data.memoryLimit
-              };
-            }
-            return next;
-          })
-          toast.success(`Fetched: ${data.title}`)
-        } else if (status === 'error') {
-          if (!isNaN(index)) {
-            setProblems(prev => {
-              const next = [...prev]
-              if (next[index]) {
-                next[index] = { ...next[index], title: 'Problem Not Found', url: '' };
-              }
-              return next;
-            })
+      if (event.source !== window || event.data?.type !== 'NJUDGE_SCRAPE_PROBLEM_RESPONSE') return
+      const { payload, requestId } = event.data;
+      if (!payload) return;
+      const { status, data, message } = payload;
+      const index = parseInt(requestId)
+      
+      if (status === 'success' && !isNaN(index)) {
+        setProblems(prev => {
+          const next = [...prev];
+          if (next[index]) {
+            next[index] = { ...next[index], title: data.title, url: data.url, statementHtml: data.statementHtml, timeLimit: data.timeLimit, memoryLimit: data.memoryLimit };
           }
-          toast.error(`Failed to fetch problem at index ${index + 1}`)
-        }
-        setScrapingIndex(null);
+          return next;
+        });
+        toast.success(`Fetched: ${data.title}`);
+      } else if (status === 'error' && !isNaN(index)) {
+        setProblems(prev => {
+          const next = [...prev];
+          if (next[index]) next[index] = { ...next[index], title: 'Problem Not Found', url: '' };
+          return next;
+        });
+        toast.error(`Problem not found on ${problems[index]?.oj}`);
       }
+      setScrapingIndex(null);
     }
-
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [])
+  }, [problems])
 
   const addProblem = () => {
     setProblems([...problems, { oj: 'CF', external_id: '', title: '', url: '' }])
@@ -120,82 +116,59 @@ export default function CreateContest() {
 
   const removeProblem = (index: number) => {
     setProblems(problems.filter((_, i) => i !== index))
-    // Also clean up scrapedIds tracking
-    const newScraped = { ...scrapedIds }
-    delete newScraped[index]
-    setScrapedIds(newScraped)
+    const newScraped = { ...scrapedIds }; delete newScraped[index]; setScrapedIds(newScraped);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // VALIDATIONS
-    if (!title.trim()) {
-      toast.error("Contest title is required")
-      return
+    if (!user) { toast.error("User session lost. Please login."); return; }
+
+    // 1. Title validation
+    if (!title.trim()) { toast.error("Contest title is required"); return; }
+
+    // 2. Date validation (Sync with system time)
+    if (!startDate) { toast.error("Please select a start date"); return; }
+    const combinedDateTime = new Date(startDate)
+    const [hours, minutes] = startTimeStr.split(':').map(Number)
+    combinedDateTime.setHours(hours, minutes, 0, 0)
+
+    if (combinedDateTime <= new Date()) {
+      toast.error("Start time must be in the future. Check your system clock.");
+      return;
     }
 
-    if (!startDate) {
-      toast.error("Please select a start date")
-      return
-    }
-
+    // 3. Problem count validation
     if (problems.length === 0) {
-      toast.error("Add at least one problem to the contest")
-      return
+      toast.error("Add at least one problem to host a contest.");
+      return;
     }
 
-    const hasInvalidProblems = problems.some(p => !p.title || p.title === 'Problem Not Found')
-    if (hasInvalidProblems) {
-      toast.error("One or more problems are invalid or could not be found")
-      return
+    // 4. Problem validity validation
+    const hasInvalid = problems.some(p => !p.title || p.title === 'Problem Not Found' || !p.external_id);
+    if (hasInvalid) {
+      toast.error("One or more problems are invalid. Check IDs.");
+      return;
     }
 
     setIsSubmitting(true)
-
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('You must be logged in to create a contest.')
-
-      // Combine Date and Time
-      const combinedDateTime = new Date(startDate)
-      const [hours, minutes] = startTimeStr.split(':').map(Number)
-      combinedDateTime.setHours(hours, minutes, 0, 0)
-
-      // 1. Create Contest
       const { data: contest, error: contestError } = await supabase
         .from('contests')
         .insert({
-          title,
-          description,
-          start_time: combinedDateTime.toISOString(),
-          duration_minutes: parseInt(duration),
-          owner_id: user.id,
-          is_private: isPrivate,
-          password: isPrivate ? password : null,
-          ranking_rule: rankingRule
+          title, description, start_time: combinedDateTime.toISOString(),
+          duration_minutes: parseInt(duration), owner_id: user.id,
+          is_private: isPrivate, password: isPrivate ? password : null, ranking_rule: rankingRule
         })
-        .select()
-        .single()
+        .select().single()
 
       if (contestError) throw contestError
 
-      // 2. Create Problems
       const problemsToInsert = problems.map(p => ({
-        contest_id: contest.id,
-        oj: p.oj,
-        external_id: p.external_id,
-        title: p.title,
-        problem_url: p.url,
-        statement_html: p.statementHtml,
-        time_limit: p.timeLimit,
-        memory_limit: p.memoryLimit
+        contest_id: contest.id, oj: p.oj, external_id: p.external_id, title: p.title,
+        problem_url: p.url, statement_html: p.statementHtml, time_limit: p.timeLimit, memory_limit: p.memoryLimit
       }))
 
-      const { error: problemsError } = await supabase
-        .from('problems')
-        .insert(problemsToInsert)
-
+      const { error: problemsError } = await supabase.from('problems').insert(problemsToInsert)
       if (problemsError) throw problemsError
 
       toast.success("Contest launched successfully!")
@@ -207,83 +180,71 @@ export default function CreateContest() {
     }
   }
 
+  if (isAuthLoading) return <div className="flex justify-center p-24 text-inara-primary"><Loader2 className="animate-spin" /></div>
+
   return (
     <main className="max-w-7xl mx-auto py-12 px-4 w-full">
-      <div className="mb-8 space-y-2">
-        <h1 className="text-4xl font-extrabold tracking-tight">Organize Contest</h1>
-        <p className="text-muted-foreground text-lg italic">Build your challenge, invite participants, and watch the leaderboard.</p>
+      <div className="mb-10 space-y-2 border-b-4 border-inara-border pb-8">
+        <h1 className="text-5xl font-black tracking-tight text-inara-logic uppercase leading-none">New Challenge</h1>
+        <p className="text-inara-logic/60 font-medium italic">Configure your arena rules and problem set.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Basic Info */}
-        <div className="lg:col-span-2 space-y-8">
-          <Card className="border-2 shadow-sm">
-            <CardHeader className="bg-muted/10 border-b">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Settings className="w-5 h-5 text-primary" /> Basic Information
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-10">
+          <Card className="inara-block border-0 bg-transparent shadow-none">
+            <CardHeader className="bg-inara-muted/30 border-2 border-inara-border rounded-t-xl py-4">
+              <CardTitle className="flex items-center gap-2 text-xl font-black text-inara-logic uppercase">
+                <Settings className="w-5 h-5 text-inara-primary" /> Core Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="bg-white border-2 border-t-0 border-inara-border rounded-b-xl space-y-8 p-8">
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-xs font-bold uppercase tracking-widest opacity-70">Contest Title</Label>
+                <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest opacity-40">Contest Title</Label>
                 <Input 
-                  id="title" 
-                  value={title} 
-                  onChange={e => setTitle(e.target.value)} 
-                  required 
-                  placeholder="e.g., Codeforces Div. 2 Mirror" 
-                  className="text-lg h-12 border-2 focus-visible:ring-primary/20"
+                  id="title" value={title} onChange={e => setTitle(e.target.value)} required 
+                  placeholder="e.g., Weekly Roundup #42" 
+                  className="text-xl h-14 border-2 font-bold focus-visible:ring-inara-primary/20"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest opacity-70">Description (Optional)</Label>
+                <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest opacity-40">Description</Label>
                 <Input 
-                  id="description" 
-                  value={description} 
-                  onChange={e => setDescription(e.target.value)} 
-                  placeholder="Write a brief description or rules..." 
-                  className="border-2"
+                  id="description" value={description} onChange={e => setDescription(e.target.value)} 
+                  placeholder="Add context or rules for participants..." 
+                  className="border-2 font-medium h-12"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest opacity-70">Start Date</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2 text-inara-logic">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Start Date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full h-11 justify-start text-left font-normal border-2",
+                          "w-full h-12 justify-start text-left font-bold border-2 border-inara-border",
                           !startDate && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                        <CalendarIcon className="mr-2 h-4 w-4 text-inara-primary" />
+                        {startDate ? format(startDate, "PPP") : <span>Select Date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={setStartDate}
-                        initialFocus
-                      />
+                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
                     </PopoverContent>
                   </Popover>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest opacity-70">Start Time</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Start Time</Label>
                   <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-inara-primary" />
                     <Input 
-                      type="time" 
-                      value={startTimeStr} 
-                      onChange={e => setStartTimeStr(e.target.value)} 
-                      required 
-                      className="h-11 pl-10 border-2"
+                      type="time" value={startTimeStr} onChange={e => setStartTimeStr(e.target.value)} 
+                      required className="h-12 pl-12 border-2 border-inara-border font-bold text-inara-logic"
                     />
                   </div>
                 </div>
@@ -291,39 +252,32 @@ export default function CreateContest() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 bg-muted/10 border-b py-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Trophy className="w-5 h-5 text-primary" /> Problem Set
-              </CardTitle>
-              <Button type="button" variant="outline" size="sm" onClick={addProblem} className="h-9 font-bold bg-background">
-                <Plus className="w-4 h-4 mr-2" /> Add Problem
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-3xl font-black text-inara-logic uppercase">Problem Set</h2>
+              <Button type="button" variant="outline" size="sm" onClick={addProblem} className="inara-btn bg-white border-inara-border h-10 px-6 font-black">
+                <Plus className="w-4 h-4 mr-2 text-inara-primary" /> ADD PROBLEM
               </Button>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              {problems.length === 0 && (
-                <div className="text-center py-12 border-2 border-dashed rounded-2xl bg-muted/5">
-                  <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                  <p className="text-muted-foreground font-medium">Your contest is empty. Add some problems!</p>
-                </div>
-              )}
-              
+            </div>
+
+            {problems.length === 0 && (
+              <div className="py-20 text-center border-4 border-dashed border-inara-border/20 rounded-3xl bg-inara-muted/5 flex flex-col items-center gap-4">
+                <Trophy className="w-16 h-16 text-inara-logic/10" />
+                <p className="text-inara-logic/40 font-bold italic">Your contest is empty. Use the button above to begin.</p>
+              </div>
+            )}
+            
+            <div className="space-y-4">
               {problems.map((prob, index) => (
-                <div key={index} className="flex flex-col md:flex-row gap-3 items-end p-5 border-2 rounded-2xl bg-card shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                <div key={index} className="inara-block bg-white p-6 flex flex-col md:flex-row gap-4 items-end relative group">
+                  <div className="absolute top-0 left-0 w-2 h-full bg-inara-primary/30 group-hover:bg-inara-primary transition-colors" />
                   
-                  <div className="w-full md:w-36 space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest font-black opacity-40">Judge</Label>
-                    <Select 
-                      value={prob.oj} 
-                      onValueChange={v => {
-                        const newProbs = [...problems]
-                        newProbs[index].oj = v as 'CF' | 'AC'
-                        newProbs[index].title = '' // Reset title on OJ change
-                        setProblems(newProbs)
-                      }}
-                    >
-                      <SelectTrigger className="h-10 border-2 font-bold">
+                  <div className="w-full md:w-40 space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Judge Node</Label>
+                    <Select value={prob.oj} onValueChange={v => {
+                      const newProbs = [...problems]; newProbs[index].oj = v as 'CF' | 'AC'; newProbs[index].title = ''; setProblems(newProbs);
+                    }}>
+                      <SelectTrigger className="h-11 border-2 border-inara-border font-black text-inara-primary">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -333,71 +287,63 @@ export default function CreateContest() {
                     </Select>
                   </div>
 
-                  <div className="w-full md:w-48 space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest font-black opacity-40">Problem ID</Label>
+                  <div className="w-full md:w-56 space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Problem ID</Label>
                     <div className="relative">
                       <Input 
-                        value={prob.external_id} 
-                        onChange={e => {
-                          const newProbs = [...problems]
-                          newProbs[index].external_id = e.target.value
-                          newProbs[index].title = ''
-                          setProblems(newProbs)
+                        value={prob.external_id} onChange={e => {
+                          const newProbs = [...problems]; newProbs[index].external_id = e.target.value; newProbs[index].title = ''; setProblems(newProbs);
                         }} 
-                        placeholder={prob.oj === 'CF' ? "e.g. 123A" : "e.g. abc123_a"}
-                        className="h-10 pr-10 border-2 font-mono"
+                        placeholder={prob.oj === 'CF' ? "e.g. 123A" : "e.g. abc344_a"}
+                        className="h-11 pr-10 border-2 border-inara-border font-mono font-bold"
                       />
                       {scrapingIndex === index && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          <Loader2 className="w-4 h-4 animate-spin text-inara-primary" />
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div className="flex-1 space-y-2 w-full">
-                    <Label className="text-[10px] uppercase tracking-widest font-black opacity-40">Fetched Title</Label>
+                    <Label className="text-[10px] font-black uppercase opacity-40">Resolved Title</Label>
                     <Input 
-                      value={prob.title} 
-                      readOnly
-                      placeholder={scrapingIndex === index ? "Fetching from OJ..." : "Awaiting valid ID..."}
+                      value={prob.title} readOnly placeholder="Auto-fetching from OJ..."
                       className={cn(
-                        "h-10 transition-all font-semibold",
-                        prob.title === 'Problem Not Found' ? 'border-rose-200 bg-rose-50 text-rose-600' : 'bg-muted/30 border-dashed'
+                        "h-11 font-bold border-2 border-dashed border-inara-border/30 bg-inara-muted/10",
+                        prob.title === 'Problem Not Found' && "text-rose-600 border-rose-200 bg-rose-50"
                       )}
                     />
                   </div>
 
-                  <Button type="button" variant="ghost" className="text-muted-foreground hover:text-destructive h-10 w-10 p-0 transition-colors" onClick={() => removeProblem(index)}>
+                  <Button type="button" variant="ghost" className="text-inara-logic/30 hover:text-rose-600 h-11 w-11 p-0 transition-colors" onClick={() => removeProblem(index)}>
                     <Trash2 className="w-5 h-5" />
                   </Button>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        {/* Right Column: Settings */}
-        <div className="space-y-6">
-          <Card className="sticky top-24 border-2 shadow-lg">
-            <CardHeader className="bg-primary/5 border-b">
-              <CardTitle className="text-lg">Rules & Privacy</CardTitle>
-              <CardDescription>Finalize your contest configuration.</CardDescription>
+        <div className="space-y-8">
+          <Card className="inara-block border-0 bg-transparent shadow-none sticky top-24">
+            <CardHeader className="bg-inara-primary text-white border-2 border-inara-primary-dark rounded-t-xl py-4">
+              <CardTitle className="text-lg font-black uppercase tracking-tight italic">Arena Config</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="bg-white border-2 border-t-0 border-inara-border rounded-b-xl space-y-8 p-8">
               <div className="space-y-4">
-                <Label className="text-[10px] uppercase tracking-widest font-black opacity-40">Ranking Rule</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Ranking Strategy</Label>
                 <div className="grid grid-cols-1 gap-2">
                   {(['ICPC', 'AtCoder', 'IOI'] as const).map((rule) => (
                     <div 
-                      key={rule}
-                      onClick={() => setRankingRule(rule)}
-                      className={`cursor-pointer border-2 p-3 rounded-xl flex justify-between items-center transition-all ${
-                        rankingRule === rule ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'hover:border-primary/20 hover:bg-slate-50 border-transparent'
-                      }`}
+                      key={rule} onClick={() => setRankingRule(rule)}
+                      className={cn(
+                        "cursor-pointer border-2 p-4 rounded-xl flex justify-between items-center transition-all",
+                        rankingRule === rule ? "border-inara-primary bg-inara-primary/5 ring-4 ring-inara-primary/5 shadow-sm" : "border-inara-border/10 hover:border-inara-primary/30"
+                      )}
                     >
-                      <div className="font-bold text-sm">{rule}</div>
-                      <div className="text-[10px] font-bold text-muted-foreground opacity-60">
+                      <div className="font-black text-sm text-inara-logic">{rule}</div>
+                      <div className="text-[10px] font-bold text-inara-logic opacity-40">
                         {rule === 'ICPC' ? 'Penalties' : rule === 'AtCoder' ? 'Score' : 'Subtasks'}
                       </div>
                     </div>
@@ -405,60 +351,48 @@ export default function CreateContest() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-6 border-t">
+              <div className="space-y-6 pt-6 border-t-2 border-inara-border/10">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="is-private" className="flex items-center gap-2 cursor-pointer font-bold">
-                    {isPrivate ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className="w-4 h-4 text-emerald-500" />}
+                  <Label htmlFor="is-private" className="flex items-center gap-2 cursor-pointer font-bold text-inara-logic">
+                    {isPrivate ? <Lock className="w-4 h-4 text-rose-500" /> : <Unlock className="w-4 h-4 text-emerald-500" />}
                     Private Mode
                   </Label>
                   <input 
-                    id="is-private" 
-                    type="checkbox" 
-                    checked={isPrivate} 
-                    onChange={e => setIsPrivate(e.target.checked)} 
-                    className="w-5 h-5 rounded-lg border-2 border-slate-300 text-primary focus:ring-primary transition-all"
+                    id="is-private" type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} 
+                    className="w-6 h-6 rounded-lg border-3 border-inara-border text-inara-primary focus:ring-inara-primary/30 cursor-pointer"
                   />
                 </div>
                 
                 {isPrivate && (
-                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                    <Label htmlFor="password" className="text-[10px] uppercase tracking-widest font-black opacity-40">Entry Password</Label>
+                  <div className="space-y-2 animate-in slide-in-from-top-2">
+                    <Label htmlFor="password" className="text-[10px] font-black uppercase opacity-40">Access Code</Label>
                     <Input 
-                      id="password" 
-                      type="password" 
-                      value={password} 
-                      onChange={e => setPassword(e.target.value)} 
-                      placeholder="e.g. NJUDGE2024" 
-                      required={isPrivate}
-                      className="border-2 font-mono"
+                      id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} 
+                      placeholder="e.g. INARA_PASS" required={isPrivate} className="h-12 border-2 font-mono font-bold"
                     />
                   </div>
                 )}
 
-                <div className="space-y-2 pt-2">
-                  <Label htmlFor="duration" className="text-[10px] uppercase tracking-widest font-black opacity-40">Duration (Minutes)</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="duration" className="text-[10px] font-black uppercase opacity-40">Duration (Minutes)</Label>
                   <Input 
-                    id="duration" 
-                    type="number" 
-                    value={duration} 
-                    onChange={e => setDuration(e.target.value)} 
-                    required 
-                    className="h-11 border-2 font-bold"
+                    id="duration" type="number" value={duration} onChange={e => setDuration(e.target.value)} 
+                    required className="h-12 border-2 font-black text-lg text-inara-logic"
                   />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex-col gap-3 pt-6 border-t bg-muted/5">
+            <CardFooter className="pt-8 flex flex-col gap-4">
               <Button 
                 type="submit" 
-                className="w-full h-14 bg-primary hover:bg-primary/90 text-lg font-black shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
+                className="w-full h-16 inara-btn inara-btn-primary text-xl font-black shadow-2xl"
                 disabled={isSubmitting}
                 onClick={handleSubmit}
               >
-                {isSubmitting ? <><Loader2 className="w-6 h-6 mr-2 animate-spin" /> Launching...</> : 'Launch Contest'}
+                {isSubmitting ? <><Loader2 className="animate-spin mr-2" /> Launching...</> : 'LAUNCH ARENA'}
               </Button>
-              <p className="text-[10px] text-center text-muted-foreground px-4 font-medium italic">
-                By clicking launch, your contest will be visible to others based on privacy settings.
+              <p className="text-[10px] text-center text-inara-logic/40 font-bold italic px-4">
+                Verify all problems are "Resolved" before launching your arena.
               </p>
             </CardFooter>
           </Card>
