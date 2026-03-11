@@ -12,12 +12,12 @@ export default function Home() {
           <span>Inara Theme v0.1</span>
         </div>
 
-        <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent uppercase leading-none">
+        <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-6 bg-gradient-to-b from-inara-logic to-inara-logic/60 bg-clip-text text-transparent uppercase leading-none">
           Code <span className="text-inara-primary uppercase">Simple</span> <br />
           Compete <span className="text-inara-accent uppercase">Everywhere</span>
         </h1>
         
-        <p className="text-xl text-white/60 max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
+        <p className="text-xl text-inara-logic/60 max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
           The friendly way to practice and host programming contests. <br/>
           <span className="inara-data font-mono">[ 100% Reliable ] [ Multi-Platform ]</span>
         </p>
@@ -28,7 +28,7 @@ export default function Home() {
               View Contests <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>
-          <Button size="lg" variant="outline" className="inara-btn h-14 px-10 text-lg bg-transparent border-white/20 hover:border-inara-accent hover:text-inara-accent text-white" asChild>
+          <Button size="lg" variant="outline" className="inara-btn h-14 px-10 text-lg bg-transparent border-inara-logic/20 hover:border-inara-accent hover:text-inara-accent text-inara-logic" asChild>
             <Link href="/extension">
               Install Bridge
             </Link>
@@ -68,8 +68,8 @@ function Feature({ icon, title, description }: { icon: React.ReactNode, title: s
       <div className="bg-inara-bg/50 p-4 rounded-xl w-fit border-2 border-inara-border">
         {icon}
       </div>
-      <h3 className="text-2xl font-black tracking-tight">{title}</h3>
-      <p className="text-white/50 leading-relaxed text-sm font-medium">{description}</p>
+      <h3 className="text-2xl font-black tracking-tight text-inara-logic">{title}</h3>
+      <p className="text-inara-logic/50 leading-relaxed text-sm font-medium">{description}</p>
     </div>
   );
 }

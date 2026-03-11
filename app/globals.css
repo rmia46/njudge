@@ -24,17 +24,17 @@
 
   /* Shadcn Overrides - Light Mode Tuning */
   --color-background: oklch(var(--inara-bg));
-  --color-foreground: oklch(var(--inara-border)); 
+  --color-foreground: oklch(var(--inara-logic)); /* Navy text */
   --color-primary: oklch(var(--inara-primary));
   --color-primary-foreground: white;
   --color-card: oklch(var(--inara-card));
-  --color-card-foreground: oklch(var(--inara-border));
+  --color-card-foreground: oklch(var(--inara-logic));
   --color-popover: oklch(var(--inara-card));
-  --color-popover-foreground: oklch(var(--inara-border));
+  --color-popover-foreground: oklch(var(--inara-logic));
   --color-border: oklch(var(--inara-border));
   --color-input: oklch(var(--inara-border));
   --color-muted: oklch(var(--inara-muted));
-  --color-muted-foreground: oklch(0.40 0.05 265);
+  --color-muted-foreground: oklch(var(--inara-logic) / 0.6);
   
   --radius-xl: 0.75rem;
   --radius-lg: 0.5rem;
