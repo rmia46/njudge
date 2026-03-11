@@ -37,7 +37,7 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
   }, [html])
 
   return (
-    <div className="inara-block p-8 bg-white min-h-[400px]">
+    <div className="inara-block-static p-8 bg-white min-h-[400px]">
       {/* 1. Header Metadata Bar */}
       <div className="flex flex-wrap gap-8 mb-10 pb-8 border-b-2 border-inara-border/10">
         {timeLimit && (
@@ -69,6 +69,14 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
       />
       
       <style jsx global>{`
+        /* Static Block Override - No Hover Effect */
+        .inara-block-static {
+          background: white;
+          border: 3px solid var(--inara-border);
+          border-radius: 0.5rem;
+          box-shadow: 4px 4px 0px 0px oklch(var(--inara-shadow));
+        }
+
         /* Universal Hides */
         .oj-content .header, .oj-content .property-title, .oj-content .title, .oj-content .time-limit, .oj-content .memory-limit, .oj-content .input-file, .oj-content .output-file {
           display: none !important;
@@ -137,8 +145,8 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
           color: var(--inara-primary);
           border-bottom: 2px solid var(--inara-border);
         }
-        .oj-content .sample-test .input::before { content: "Input Data"; }
-        .oj-content .sample-test .output::before { content: "Output Data"; }
+        .oj-content .sample-test .input::before { content: "Input"; }
+        .oj-content .sample-test .output::before { content: "Output"; }
         
         .oj-content .sample-test .output {
           border-top: 2px solid var(--inara-border) !important;
