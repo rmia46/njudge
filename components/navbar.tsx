@@ -37,8 +37,8 @@ export function Navbar() {
             <div className="w-9 h-9 bg-inara-primary rounded-lg flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform duration-300 border-2 border-inara-primary-dark shadow-[2px_2px_0px_0px_oklch(var(--inara-shadow))]">
               <Trophy className="w-5 h-5 text-white" />
             </div>
-            <span className="text-2xl font-black italic tracking-tighter uppercase">
-              n<span className="text-inara-primary">Judge</span>
+            <span className="text-3xl font-pixel lowercase leading-none tracking-tighter">
+              n<span className="text-inara-primary">judge</span>
             </span>
           </Link>
 
