@@ -39,9 +39,8 @@ async function handleCustomTest({ oj, code, languageId, input }) {
     const customTestUrl = 'https://codeforces.com/customtest';
     const getResp = await fetch(customTestUrl);
     const getHtml = await getResp.text();
-    const csrfMatch = getHtml.match(/data-csrf='(.+?)'/);
-    if (!csrfMatch) throw new Error('Could not find CSRF token. Log into Codeforces.');
-    const csrfToken = csrfMatch[1];
+    const csrfToken = getHtml.match(/data-csrf='(.+?)'/)?.[1];
+    if (!csrfToken) throw new Error('Could not find CSRF token. Log into Codeforces.');
 
     const formData = new FormData();
     formData.append('csrf_token', csrfToken);
@@ -90,7 +89,6 @@ async function handleScrapeProblem({ oj, id }) {
       if (!match) throw new Error('Invalid Codeforces ID (e.g. 123A)');
       const contestId = match[1];
       const problemIndex = match[2];
-      
       const urls = [
         `https://codeforces.com/contest/${contestId}/problem/${problemIndex}`,
         `https://codeforces.com/problemset/problem/${contestId}/${problemIndex}`,
@@ -101,47 +99,34 @@ async function handleScrapeProblem({ oj, id }) {
         try {
           const response = await fetch(targetUrl);
           if (!response.ok) continue;
-          
           const finalUrl = response.url;
-          // Check for redirects to non-problem pages
           if (!finalUrl.includes(contestId) || !finalUrl.toLowerCase().includes(problemIndex.toLowerCase())) {
             if (!finalUrl.includes('problemset') && !finalUrl.includes('contest')) continue;
           }
-
           const html = await response.text();
           
           // 1. Title
           const divMatch = html.match(/<div class="title">[\s\S]*?([A-Z]\d*[\.\s]+)?([^<]+)<\/div>/);
           const title = divMatch ? divMatch[2].trim() : '';
 
-          // 2. Statement & Metadata
-          let statementHtml = '';
-          let timeLimit = '1.0s';
-          let memoryLimit = '256MB';
-
+          // 2. RAW Container extraction (VJudge style)
           const startIdx = html.indexOf('<div class="problem-statement">');
           const endIdx = html.indexOf('<script', startIdx);
-          
+          let statementHtml = '';
           if (startIdx !== -1 && endIdx !== -1) {
             statementHtml = html.substring(startIdx, endIdx);
-            
-            // Extract metadata from raw HTML if possible
-            const tMatch = statementHtml.match(/<div class="time-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
-            const mMatch = statementHtml.match(/<div class="memory-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
-            
-            if (tMatch) timeLimit = tMatch[1].trim();
-            if (mMatch) memoryLimit = mMatch[1].trim();
-
-            // Clean the header from statement
-            statementHtml = statementHtml.replace(/<div class="header">[\s\S]*?<\/div>/, '');
           }
 
-          if (title || statementHtml) {
-            return { title: title || 'Problem ' + id, url: finalUrl, statementHtml, timeLimit, memoryLimit };
+          // Metadata extraction
+          const tMatch = html.match(/<div class="time-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
+          const mMatch = html.match(/<div class="memory-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
+
+          if (statementHtml) {
+            return { title: title || 'Problem ' + id, url: finalUrl, statementHtml, timeLimit: tMatch?.[1].trim() || '1.0s', memoryLimit: mMatch?.[1].trim() || '256MB' };
           }
         } catch (e) { }
       }
-      throw new Error('Problem Not Found on Codeforces');
+      throw new Error('Problem Not Found');
     }
     
     if (oj === 'AC') {
@@ -156,11 +141,13 @@ async function handleScrapeProblem({ oj, id }) {
       const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
       const title = titleTagMatch?.[1].split(' - ')[1]?.trim() || 'Unknown';
 
-      const statementMatch = html.match(/<div id="task-statement">([\s\S]*?)<\/div>\s*<div class="button-pannel">/);
-      let statementHtml = statementMatch ? statementMatch[1] : '';
-
-      statementHtml = statementHtml.replace(/<span class="lang-ja">[\s\S]*?<\/span>/g, '');
-      statementHtml = statementHtml.replace(/<span class="lang-en">([\s\S]*?)<\/span>/, '$1');
+      // Capture the whole task-statement section
+      const startIdx = html.indexOf('<div id="task-statement">');
+      const endIdx = html.indexOf('</div>', html.indexOf('<div class="button-pannel">'));
+      let statementHtml = '';
+      if (startIdx !== -1 && endIdx !== -1) {
+        statementHtml = html.substring(startIdx, endIdx);
+      }
 
       const acLimitMatch = html.match(/Time Limit: (.*?) \/ Memory Limit: (.*?)<\/p>/);
 
