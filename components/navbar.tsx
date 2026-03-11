@@ -49,7 +49,7 @@ export function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em]">
+          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-white/80">
             <Link href="/contests" className="text-white/70 hover:text-inara-primary transition-colors flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-inara-primary/40 rounded-full" />
               Contests
@@ -72,16 +72,16 @@ export function Navbar() {
                 <Palette className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 inara-block bg-inara-card p-1">
-              <div className="px-3 py-2 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-inara-border mb-1">Appearance</div>
+            <DropdownMenuContent align="end" className="w-48 inara-block bg-inara-card p-1 border-2">
+              <div className="px-3 py-2 text-xs font-bold text-white/40 border-b border-inara-border mb-1">Appearance</div>
               <DropdownMenuItem onClick={() => { setCurrentTheme('emerald'); applyTheme('emerald'); }} className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg">
                 <div className="h-4 w-4 rounded-md bg-inara-primary border-2 border-inara-primary-dark" />
-                <span className="font-bold text-xs uppercase tracking-tight">Emerald Theme</span>
+                <span className="font-bold text-sm tracking-tight text-white">Emerald Theme</span>
                 {currentTheme === 'emerald' && <CheckCircle2 className="w-3 h-3 ml-auto text-inara-primary" />}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { setCurrentTheme('midnight'); applyTheme('midnight'); }} className="gap-3 cursor-pointer py-2 focus:bg-inara-accent/10 rounded-lg">
                 <div className="h-4 w-4 rounded-md bg-inara-accent border-2 border-inara-accent/50" />
-                <span className="font-bold text-xs uppercase tracking-tight">Midnight Theme</span>
+                <span className="font-bold text-sm tracking-tight text-white">Midnight Theme</span>
                 {currentTheme === 'midnight' && <CheckCircle2 className="w-3 h-3 ml-auto text-inara-accent" />}
               </DropdownMenuItem>
               
@@ -92,7 +92,7 @@ export function Navbar() {
                   <Moon className="w-4 h-4 dark:hidden" />
                   <Sun className="w-4 h-4 hidden dark:block text-amber-400" />
                 </div>
-                <span className="font-bold text-xs uppercase tracking-tight">Dark Mode</span>
+                <span className="font-bold text-sm tracking-tight">Dark Mode</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -128,17 +128,17 @@ export function Navbar() {
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 inara-block bg-inara-card p-1">
+              <DropdownMenuContent align="end" className="w-56 inara-block bg-inara-card p-1 border-2">
                 <Link href="/profile">
                   <DropdownMenuItem className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg text-white">
                     <UserIcon className="w-4 h-4 text-inara-primary" />
-                    <span className="font-bold text-xs uppercase tracking-tight">My Profile</span>
+                    <span className="font-bold text-sm">My Profile</span>
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/contests/create">
                   <DropdownMenuItem className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg text-white">
                     <PlusCircle className="w-4 h-4 text-inara-primary" />
-                    <span className="font-bold text-xs uppercase tracking-tight">Create Contest</span>
+                    <span className="font-bold text-sm">Create Contest</span>
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator className="bg-inara-border h-[2px]" />
@@ -147,7 +147,7 @@ export function Navbar() {
                   onClick={() => supabase.auth.signOut().then(() => window.location.href = '/')}
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="font-bold text-xs uppercase tracking-tight">Sign Out</span>
+                  <span className="font-bold text-sm">Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

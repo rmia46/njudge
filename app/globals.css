@@ -97,7 +97,7 @@
 
   /* Tactile Buttons */
   .inara-btn {
-    @apply relative inline-flex items-center justify-center px-6 py-2 font-black uppercase tracking-wider 
+    @apply relative inline-flex items-center justify-center px-6 py-2 font-bold 
            border-[3px] border-inara-border rounded-sm transition-all active:translate-y-[2px] active:shadow-none;
     box-shadow: 0px 4px 0px 0px oklch(var(--inara-shadow));
   }
@@ -113,7 +113,7 @@
 
   /* Pixel Badges */
   .inara-badge {
-    @apply px-2 py-0.5 border-2 border-current rounded-sm font-mono text-[10px] font-black uppercase;
+    @apply px-2 py-0.5 border-2 border-current rounded-sm font-mono text-[10px] font-bold;
   }
 
   /* Problem Statement Enhancements */

@@ -10,10 +10,10 @@ export default function CanvasPage() {
   return (
     <main className="max-w-6xl mx-auto py-12 px-4 space-y-16 w-full">
       <header className="space-y-4">
-        <div className="inline-block px-3 py-1 rounded-md bg-inara-primary/10 border-2 border-inara-primary/20 text-inara-primary text-[10px] font-black uppercase tracking-widest">
+        <div className="inline-block px-3 py-1 rounded-md bg-inara-primary/10 border-2 border-inara-primary/20 text-inara-primary text-[10px] font-black tracking-widest">
           Inara Lab v0.1
         </div>
-        <h1 className="text-5xl md:text-7xl font-black italic uppercase italic tracking-tighter">
+        <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter">
           Design <span className="text-inara-primary">Canvas</span>
         </h1>
         <p className="text-white/50 text-xl max-w-2xl font-medium">
@@ -25,7 +25,7 @@ export default function CanvasPage() {
       <section className="space-y-8">
         <div className="flex items-center gap-4">
           <div className="h-[2px] flex-1 bg-inara-border" />
-          <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40">01. Color Palette</h2>
+          <h2 className="text-xs font-black opacity-40">01. Color Palette</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <ColorSwatch name="Primary" oklch={INARA_PALETTE.primary.base} label="Byte Green" />
@@ -47,16 +47,16 @@ export default function CanvasPage() {
       <section className="space-y-8">
         <div className="flex items-center gap-4">
           <div className="h-[2px] flex-1 bg-inara-border" />
-          <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40">02. Typography</h2>
+          <h2 className="text-xs font-black opacity-40">02. Typography</h2>
         </div>
         <div className="grid md:grid-cols-2 gap-12">
           <div className="space-y-4">
-            <h3 className="text-sm font-bold text-inara-primary uppercase tracking-widest">Interface Sans</h3>
+            <h3 className="text-sm font-bold text-inara-primary tracking-widest">Interface Sans</h3>
             <p className="text-4xl font-black">Figtree Black Italic</p>
             <p className="text-lg text-white/70">The quick brown fox jumps over the lazy dog. For joyful navigation and clear instructions.</p>
           </div>
           <div className="space-y-4">
-            <h3 className="text-sm font-bold text-inara-accent uppercase tracking-widest">Technical Mono</h3>
+            <h3 className="text-sm font-bold text-inara-accent tracking-widest">Technical Mono</h3>
             <p className="text-4xl font-mono font-bold tracking-tight">JetBrains Mono</p>
             <p className="text-lg font-mono text-inara-primary/80">
               user_rank = 0x01;<br/>
@@ -71,14 +71,14 @@ export default function CanvasPage() {
       <section className="space-y-8">
         <div className="flex items-center gap-4">
           <div className="h-[2px] flex-1 bg-inara-border" />
-          <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40">03. UI Elements</h2>
+          <h2 className="text-xs font-black opacity-40">03. UI Elements</h2>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8">
           {/* Card Showcase */}
           <div className="inara-block p-8 space-y-6">
             <div className="flex justify-between items-start">
-              <h3 className="text-2xl font-black uppercase italic tracking-tight">The Inara Block</h3>
+              <h3 className="text-2xl font-black tracking-tight">The Inara Block</h3>
               <Badge className="inara-badge border-inara-primary text-inara-primary">Active</Badge>
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
@@ -131,7 +131,7 @@ export default function CanvasPage() {
         
         <div className="inara-block overflow-hidden">
           <div className="bg-inara-muted/50 p-4 border-b-2 border-inara-border flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">System Standings</span>
+            <span className="text-xs font-bold text-white/60">System Standings</span>
             <div className="flex gap-2">
               <div className="w-2 h-2 rounded-full bg-rose-500" />
               <div className="w-2 h-2 rounded-full bg-amber-500" />
@@ -142,10 +142,10 @@ export default function CanvasPage() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-inara-bg">
                 <tr className="border-b-2 border-inara-border">
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest opacity-40">Rank</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest opacity-40">User</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest opacity-40 text-center">Score</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest opacity-40 text-right">Verdict</th>
+                  <th className="p-4 text-[10px] font-black opacity-40">Rank</th>
+                  <th className="p-4 text-[10px] font-black opacity-40">User</th>
+                  <th className="p-4 text-[10px] font-black opacity-40 text-center">Score</th>
+                  <th className="p-4 text-[10px] font-black opacity-40 text-right">Verdict</th>
                 </tr>
               </thead>
               <tbody className="divide-y-2 divide-inara-border/10">

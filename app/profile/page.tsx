@@ -284,12 +284,12 @@ export default function ProfilePage() {
 
 function StatCard({ title, value, subtitle }: { title: string, value: string, subtitle: string }) {
   return (
-    <Card className="border-2">
+    <Card className="border-2 rounded-xl">
       <CardHeader className="py-3 px-4">
-        <CardDescription className="text-[10px] uppercase font-extrabold tracking-widest text-primary/70">{title}</CardDescription>
+        <CardDescription className="text-[10px] font-bold tracking-widest text-primary/70">{title}</CardDescription>
       </CardHeader>
       <CardContent className="px-4 pb-4">
-        <div className="text-3xl font-extrabold mb-1 tracking-tight">{value}</div>
+        <div className="text-3xl font-black mb-1 tracking-tight">{value}</div>
         <p className="text-[10px] text-muted-foreground font-medium">{subtitle}</p>
       </CardContent>
     </Card>
