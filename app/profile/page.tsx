@@ -101,7 +101,7 @@ export default function ProfilePage() {
   if (!user) return <div className="text-center p-24">Please login to view your profile.</div>
 
   return (
-    <main className="container max-w-6xl py-12 px-4">
+    <main className="max-w-6xl mx-auto py-12 px-4 w-full">
       <div className="flex flex-col md:flex-row gap-8 items-start">
         {/* Sidebar: Profile Info */}
         <div className="w-full md:w-80 space-y-6">

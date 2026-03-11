@@ -3,6 +3,7 @@ import { Figtree } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Toaster } from "sonner";
+import { getInaraVariables } from "@/lib/inara-colors";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -19,9 +20,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const inaraVars = getInaraVariables();
+
   return (
-    <html lang="en">
-      <body className={`${figtree.variable} antialiased min-h-screen bg-slate-50/30`}>
+    <html lang="en" style={inaraVars as React.CSSProperties}>
+      <body className={`${figtree.variable} antialiased min-h-screen bg-inara-bg transition-colors duration-500`}>
         <Navbar />
         {children}
         <Toaster richColors position="top-right" />

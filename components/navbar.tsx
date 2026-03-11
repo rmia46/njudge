@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { LayoutDashboard, Trophy, PlusCircle, LogIn, LogOut, User as UserIcon, Palette, Moon, Sun, CheckCircle2 } from 'lucide-react'
+import { Trophy, PlusCircle, LogIn, LogOut, User as UserIcon, Palette, Moon, Sun, CheckCircle2 } from 'lucide-react'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -36,26 +36,31 @@ export function Navbar() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
-  }
-
   return (
-    <nav className="border-b bg-white/50 backdrop-blur-md sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="text-xl font-bold text-emerald-600 flex items-center gap-2">
-            <Trophy className="w-6 h-6" />
-            <span>nJudge</span>
+    <nav className="border-b-4 border-inara-border bg-inara-bg/80 backdrop-blur-md sticky top-0 z-50 py-2 w-full">
+      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-10">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-9 h-9 bg-inara-primary rounded-lg flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform duration-300 border-2 border-inara-primary-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
+              <Trophy className="w-5 h-5 text-inara-bg" />
+            </div>
+            <span className="text-2xl font-black italic tracking-tighter uppercase text-white">
+              n<span className="text-inara-primary">Judge</span>
+            </span>
           </Link>
-          
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="/contests" className="hover:text-emerald-600 transition-colors">Contests</Link>
-            <Link href="/problems" className="hover:text-emerald-600 transition-colors">Problems</Link>
-            <Link href="/extension" className="hover:text-emerald-600 transition-colors flex items-center gap-1.5">
+
+          <div className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em]">
+            <Link href="/contests" className="text-white/70 hover:text-inara-primary transition-colors flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-inara-primary/40 rounded-full" />
+              Contests
+            </Link>
+            <Link href="/extension" className="text-white/70 hover:text-inara-primary transition-colors flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-inara-primary/40 rounded-full" />
               Bridge
-              <span className="flex h-2 w-2 rounded-full bg-slate-300" id="extension-status-dot"></span>
+              <span className="flex h-2 w-2 rounded-full bg-slate-700" id="extension-status-dot"></span>
+            </Link>
+            <Link href="/canvas" className="text-inara-accent hover:text-inara-accent/80 transition-colors">
+              Canvas
             </Link>
           </div>
         </div>
@@ -63,29 +68,31 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md hover:bg-inara-primary/10 text-white/60 hover:text-inara-primary">
                 <Palette className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Themes</div>
-              <DropdownMenuItem onClick={() => { setCurrentTheme('emerald'); applyTheme('emerald'); }} className="gap-2 cursor-pointer">
-                <div className="h-4 w-4 rounded-full bg-emerald-500 border border-black/10" />
-                Emerald
-                {currentTheme === 'emerald' && <CheckCircle2 className="w-3 h-3 ml-auto text-emerald-600" />}
+            <DropdownMenuContent align="end" className="w-48 inara-block bg-inara-card p-1">
+              <div className="px-3 py-2 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-inara-border mb-1">Theme Control</div>
+              <DropdownMenuItem onClick={() => { setCurrentTheme('emerald'); applyTheme('emerald'); }} className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg">
+                <div className="h-4 w-4 rounded-md bg-inara-primary border-2 border-inara-primary-dark" />
+                <span className="font-bold text-xs uppercase tracking-tight">Inara Emerald</span>
+                {currentTheme === 'emerald' && <CheckCircle2 className="w-3 h-3 ml-auto text-inara-primary" />}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { setCurrentTheme('midnight'); applyTheme('midnight'); }} className="gap-2 cursor-pointer">
-                <div className="h-4 w-4 rounded-full bg-indigo-950 border border-black/10" />
-                Midnight
-                {currentTheme === 'midnight' && <CheckCircle2 className="w-3 h-3 ml-auto text-indigo-400" />}
+              <DropdownMenuItem onClick={() => { setCurrentTheme('midnight'); applyTheme('midnight'); }} className="gap-3 cursor-pointer py-2 focus:bg-inara-accent/10 rounded-lg">
+                <div className="h-4 w-4 rounded-md bg-inara-accent border-2 border-inara-accent/50" />
+                <span className="font-bold text-xs uppercase tracking-tight">Inara Midnight</span>
+                {currentTheme === 'midnight' && <CheckCircle2 className="w-3 h-3 ml-auto text-inara-accent" />}
               </DropdownMenuItem>
               
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-inara-border h-[2px]" />
               
-              <DropdownMenuItem onClick={() => document.documentElement.classList.toggle('dark')} className="gap-2 cursor-pointer">
-                <Moon className="w-4 h-4 dark:hidden" />
-                <Sun className="w-4 h-4 hidden dark:block" />
-                Dark Mode
+              <DropdownMenuItem onClick={() => document.documentElement.classList.toggle('dark')} className="gap-3 cursor-pointer py-2 rounded-lg text-white">
+                <div className="w-4 flex justify-center">
+                  <Moon className="w-4 h-4 dark:hidden" />
+                  <Sun className="w-4 h-4 hidden dark:block text-amber-400" />
+                </div>
+                <span className="font-bold text-xs uppercase tracking-tight">Dark Mode</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -97,7 +104,7 @@ export function Navbar() {
                 const handleResponse = (e) => {
                   if (e.data && e.data.type === 'NJUDGE_PING_RESPONSE' && e.data.requestId === requestId) {
                     const dot = document.getElementById('extension-status-dot');
-                    if (dot) dot.className = 'flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+                    if (dot) dot.className = 'flex h-2 w-2 rounded-full bg-inara-primary shadow-[0_0_10px_oklch(var(--inara-primary))]';
                     window.removeEventListener('message', handleResponse);
                   }
                 };
@@ -110,40 +117,45 @@ export function Navbar() {
             })();
           `}} />
           {user ? (
-            <>
-              <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
-                <Link href="/contests/create">
-                  <PlusCircle className="w-4 h-4 mr-2" />
-                  Create Contest
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-10 gap-2 pl-2 pr-3 hover:bg-inara-primary/10 text-white group rounded-xl border-2 border-transparent hover:border-inara-primary/30 transition-all">
+                  <div className="w-7 h-7 rounded-lg bg-inara-primary flex items-center justify-center border-2 border-inara-primary-dark">
+                    <UserIcon className="w-4 h-4 text-inara-bg" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-tight hidden lg:inline-block">
+                    {user.email?.split('@')[0]}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 inara-block bg-inara-card p-1">
+                <Link href="/profile">
+                  <DropdownMenuItem className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg text-white">
+                    <UserIcon className="w-4 h-4 text-inara-primary" />
+                    <span className="font-bold text-xs uppercase tracking-tight">Command Profile</span>
+                  </DropdownMenuItem>
                 </Link>
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <UserIcon className="w-4 h-4" />
-                    <span className="max-w-[100px] truncate">{user.email}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer">Profile</Link>
+                <Link href="/contests/create">
+                  <DropdownMenuItem className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg text-white">
+                    <PlusCircle className="w-4 h-4 text-inara-primary" />
+                    <span className="font-bold text-xs uppercase tracking-tight">New Contest</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/my-submissions" className="cursor-pointer">My Submissions</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+                </Link>
+                <DropdownMenuSeparator className="bg-inara-border h-[2px]" />
+                <DropdownMenuItem 
+                  className="gap-3 cursor-pointer py-2 focus:bg-rose-500/10 text-rose-500 rounded-lg"
+                  onClick={() => supabase.auth.signOut().then(() => window.location.href = '/')}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="font-bold text-xs uppercase tracking-tight">Terminate Session</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <Button size="sm" asChild className="bg-emerald-600 hover:bg-emerald-700">
+            <Button asChild className="inara-btn inara-btn-primary h-10 px-6 text-xs shadow-none">
               <Link href="/login">
                 <LogIn className="w-4 h-4 mr-2" />
-                Login
+                Auth Input
               </Link>
             </Button>
           )}

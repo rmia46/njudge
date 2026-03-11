@@ -50,7 +50,7 @@ export default function ContestsPage() {
   const filteredContests = contests.filter(c => filter === 'all' || c.status === filter)
 
   return (
-    <main className="container max-w-7xl py-12 px-4 space-y-8">
+    <main className="max-w-7xl mx-auto py-12 px-4 space-y-8 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-2">
           <h1 className="text-4xl font-extrabold tracking-tight">Contests</h1>

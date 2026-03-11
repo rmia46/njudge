@@ -5,224 +5,130 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Semantic Colors */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Inara Theme Bridge */
+  --color-inara-primary: oklch(var(--inara-primary));
+  --color-inara-accent: oklch(var(--inara-accent));
+  --color-inara-logic: oklch(var(--inara-logic));
+  --color-inara-bg: oklch(var(--inara-bg));
+  --color-inara-card: oklch(var(--inara-card));
+  --color-inara-border: oklch(var(--inara-border));
+  --color-inara-shadow: oklch(var(--inara-shadow));
+
+  /* Verdicts */
+  --color-inara-ac: oklch(var(--inara-ac));
+  --color-inara-wa: oklch(var(--inara-wa));
+  --color-inara-tle: oklch(var(--inara-tle));
+  --color-inara-re: oklch(var(--inara-re));
+  --color-inara-ce: oklch(var(--inara-ce));
+
+  /* Shadcn Overrides */
+  --color-background: oklch(var(--inara-bg));
+  --color-foreground: oklch(0.98 0.01 160);
+  --color-primary: oklch(var(--inara-primary));
+  --color-primary-foreground: oklch(0.12 0.02 160);
+  --color-card: oklch(var(--inara-card));
+  --color-border: oklch(var(--inara-border));
   
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  /* nJudge Specific Tokens */
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-
-  /* Verdict Colors */
-  --color-verdict-ac: var(--verdict-ac);
-  --color-verdict-wa: var(--verdict-wa);
-  --color-verdict-tle: var(--verdict-tle);
-  --color-verdict-re: var(--verdict-re);
-  --color-verdict-ce: var(--verdict-ce);
-  --color-verdict-judging: var(--verdict-judging);
-
-  /* Radius */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: 1.5rem;
+  --radius-lg: 1rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.25rem;
 }
 
 :root {
-  /* Base Colors (Emerald Theme) */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.2 0.02 160);
-  
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 160);
-  
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 160);
-  
-  --primary: oklch(0.65 0.15 160);
-  --primary-foreground: oklch(0.98 0.01 160);
-  
-  --secondary: oklch(0.95 0.02 160);
-  --secondary-foreground: oklch(0.3 0.05 160);
-  
-  --muted: oklch(0.97 0.01 160);
-  --muted-foreground: oklch(0.5 0.02 160);
-  
-  --accent: oklch(0.92 0.04 160);
-  --accent-foreground: oklch(0.25 0.05 160);
-  
-  --destructive: oklch(0.6 0.18 25);
-  --destructive-foreground: oklch(0.98 0.02 25);
-  
-  --success: oklch(0.7 0.15 145);
-  --success-foreground: oklch(0.2 0.05 145);
-  
-  --warning: oklch(0.85 0.15 85);
-  --warning-foreground: oklch(0.3 0.05 85);
-  
-  --info: oklch(0.7 0.12 230);
-  --info-foreground: oklch(0.2 0.05 230);
+  /* Inara Tokens (Light Mode - We favor Dark but maintain variables) */
+  --inara-primary: 0.75 0.18 155;
+  --inara-accent: 0.70 0.25 330;
+  --inara-logic: 0.65 0.15 250;
+  --inara-bg: 0.98 0.01 160;
+  --inara-card: 1 0 0;
+  --inara-muted: 0.95 0.01 160;
+  --inara-border: 0.90 0.02 160;
+  --inara-shadow: 0.80 0.02 160;
 
-  /* Verdict Tokens */
-  --verdict-ac: oklch(0.7 0.15 145);
-  --verdict-wa: oklch(0.6 0.18 25);
-  --verdict-tle: oklch(0.85 0.15 85);
-  --verdict-re: oklch(0.65 0.15 300);
-  --verdict-ce: oklch(0.5 0.05 0);
-  --verdict-judging: oklch(0.7 0.12 230);
-
-  --border: oklch(0.9 0.01 160);
-  --input: oklch(0.9 0.01 160);
-  --ring: oklch(0.65 0.15 160 / 0.5);
-  
-  --radius: 0.75rem;
+  --inara-ac: 0.78 0.18 145;
+  --inara-wa: 0.65 0.22 25;
+  --inara-tle: 0.88 0.15 85;
+  --inara-re: 0.62 0.20 300;
+  --inara-ce: 0.55 0.05 0;
 }
 
-.dark {
-  --background: oklch(0.15 0.02 160);
-  --foreground: oklch(0.95 0.01 160);
-  
-  --card: oklch(0.18 0.02 160);
-  --card-foreground: oklch(0.95 0.01 160);
-  
-  --popover: oklch(0.18 0.02 160);
-  --popover-foreground: oklch(0.95 0.01 160);
-  
-  --primary: oklch(0.7 0.15 160);
-  --primary-foreground: oklch(0.15 0.02 160);
-  
-  --secondary: oklch(0.25 0.03 160);
-  --secondary-foreground: oklch(0.9 0.02 160);
-  
-  --muted: oklch(0.22 0.02 160);
-  --muted-foreground: oklch(0.6 0.02 160);
-  
-  --accent: oklch(0.25 0.04 160);
-  --accent-foreground: oklch(0.95 0.02 160);
-  
-  --destructive: oklch(0.5 0.15 25);
-  --destructive-foreground: oklch(0.95 0.02 25);
-
-  --border: oklch(0.3 0.02 160);
-  --input: oklch(0.3 0.02 160);
-  --ring: oklch(0.7 0.15 160 / 0.4);
-}
-
-.theme-midnight {
-  --background: oklch(0.12 0.04 260);
-  --foreground: oklch(0.95 0.02 260);
-  
-  --card: oklch(0.15 0.05 260);
-  --card-foreground: oklch(0.95 0.02 260);
-  
-  --popover: oklch(0.15 0.05 260);
-  --popover-foreground: oklch(0.95 0.02 260);
-  
-  --primary: oklch(0.65 0.18 260);
-  --primary-foreground: oklch(0.1 0.02 260);
-  
-  --secondary: oklch(0.2 0.08 260);
-  --secondary-foreground: oklch(0.9 0.03 260);
-  
-  --muted: oklch(0.18 0.06 260);
-  --muted-foreground: oklch(0.65 0.04 260);
-  
-  --accent: oklch(0.25 0.08 260);
-  --accent-foreground: oklch(0.95 0.03 260);
-  
-  --border: oklch(0.25 0.05 260);
-  --input: oklch(0.25 0.05 260);
-  --ring: oklch(0.65 0.18 260 / 0.4);
-
-  --radius: 0.5rem; /* Different radius for different theme feel */
+.dark, :root {
+  /* Default to Dark Mode Style for nJudge */
+  --inara-primary: 0.75 0.18 155;
+  --inara-accent: 0.70 0.25 330;
+  --inara-logic: 0.65 0.15 250;
+  --inara-bg: 0.12 0.02 160;
+  --inara-card: 0.16 0.03 160;
+  --inara-muted: 0.20 0.02 160;
+  --inara-border: 0.30 0.02 160;
+  --inara-shadow: 0.05 0.01 160;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-inara-border outline-inara-primary/30;
   }
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    @apply bg-inara-bg text-white font-sans selection:bg-inara-primary/30 selection:text-inara-primary;
+    background-image: radial-gradient(oklch(var(--inara-border) / 0.3) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }
 
-/* Problem Statement Styling */
-.problem-statement {
-  @apply text-[15px] leading-relaxed;
+@layer components {
+  /* Inara Bit-Art Blocks */
+  .inara-block {
+    @apply bg-inara-card border-[3px] border-inara-border rounded-xl transition-all duration-300;
+    box-shadow: 6px 6px 0px 0px oklch(var(--inara-shadow));
+  }
+
+  .inara-block:hover {
+    @apply border-inara-primary/50;
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px 0px oklch(var(--inara-shadow));
+  }
+
+  /* Tactile Buttons */
+  .inara-btn {
+    @apply relative inline-flex items-center justify-center px-6 py-2 font-black uppercase tracking-wider 
+           border-[3px] border-inara-border rounded-xl transition-all active:translate-y-[4px] active:shadow-none;
+    box-shadow: 0px 4px 0px 0px oklch(var(--inara-shadow));
+  }
+
+  .inara-btn-primary {
+    @apply bg-inara-primary text-inara-bg border-inara-primary-dark hover:bg-inara-primary-light;
+  }
+
+  /* Nerdy Data Display */
+  .inara-data {
+    @apply font-mono font-bold tracking-tight text-inara-primary;
+  }
+
+  /* Pixel Badges */
+  .inara-badge {
+    @apply px-2 py-0.5 border-2 border-current rounded-md font-mono text-[10px] font-black uppercase;
+  }
 }
 
-.problem-statement .section-title {
-  @apply text-xl font-bold text-primary mt-8 mb-3 border-b-2 border-primary/10 pb-1 uppercase tracking-tight;
+/* Problem Statement Enhancements */
+.problem-view {
+  @apply inara-block p-8;
 }
 
-.problem-statement p {
-  @apply mb-4;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-/* Sample Tests Styling */
-.sample-tests {
-  @apply mt-8 space-y-6;
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-inara-bg;
 }
 
-.sample-test {
-  @apply border-2 rounded-xl overflow-hidden bg-muted/30;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-inara-border border-2 border-inara-bg rounded-none;
 }
 
-.sample-test .input, .sample-test .output {
-  @apply p-0;
-}
-
-.sample-test .title {
-  @apply bg-muted px-4 py-2 text-xs font-black uppercase tracking-widest border-b;
-}
-
-.sample-test pre {
-  @apply p-4 font-mono text-sm m-0 bg-transparent overflow-x-auto whitespace-pre-wrap;
-}
-
-/* MathJax / Latex specific fixes */
-.math {
-  @apply font-serif italic;
-}
-
-/* AtCoder specific sections */
-#task-statement section {
-  @apply mb-8;
-}
-
-#task-statement h3 {
-  @apply text-xl font-bold text-primary mt-8 mb-3 border-b-2 border-primary/10 pb-1 uppercase tracking-tight;
-}
-
-#task-statement pre {
-  @apply p-4 font-mono text-sm bg-muted/50 rounded-xl border-2 border-dashed;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-inara-primary;
 }
