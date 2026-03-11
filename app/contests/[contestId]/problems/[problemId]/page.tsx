@@ -202,14 +202,12 @@ export default function ProblemPage() {
           <TabsTrigger value="history" className="gap-2 px-6 font-bold text-sm"><History className="w-4 h-4" /> Submission Log</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="statement" className="focus-visible:outline-none">
-          <div className="problem-view">
-            {problem.statement_html ? (
-              <ProblemStatement html={problem.statement_html} oj={problem.oj} />
-            ) : (
-              <div className="py-20 text-center italic opacity-40">No description available for this problem.</div>
-            )}
-          </div>
+        <TabsContent value="statement" className="focus-visible:outline-none min-h-[400px]">
+          {problem.statement_html ? (
+            <ProblemStatement html={problem.statement_html} oj={problem.oj} />
+          ) : (
+            <div className="inara-block p-20 text-center italic opacity-40">No description available for this problem.</div>
+          )}
         </TabsContent>
 
         <TabsContent value="editor" className="focus-visible:outline-none">

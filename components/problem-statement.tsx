@@ -41,7 +41,7 @@ export function ProblemStatement({ html, oj }: { html: string, oj: string }) {
   }, [html])
 
   return (
-    <div ref={containerRef} className="problem-view space-y-6">
+    <div ref={containerRef} className="problem-view inara-block p-8 space-y-6">
       <div 
         className={`prose prose-slate dark:prose-invert max-w-none 
           prose-pre:p-0 prose-pre:bg-transparent
