@@ -2,10 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
-  /* Inara Theme Bridge */
+  /* Inara Theme Bridge - Static Nature-Tech */
   --color-inara-primary: oklch(var(--inara-primary));
   --color-inara-primary-light: oklch(var(--inara-primary-light));
   --color-inara-primary-dark: oklch(var(--inara-primary-dark));
@@ -23,13 +21,19 @@
   --color-inara-re: oklch(var(--inara-re));
   --color-inara-ce: oklch(var(--inara-ce));
 
-  /* Shadcn Overrides */
+  /* Shadcn Overrides - Force fixed values */
   --color-background: oklch(var(--inara-bg));
   --color-foreground: oklch(0.98 0.01 160);
   --color-primary: oklch(var(--inara-primary));
-  --color-primary-foreground: oklch(0.12 0.02 160);
+  --color-primary-foreground: oklch(var(--inara-bg));
   --color-card: oklch(var(--inara-card));
+  --color-card-foreground: oklch(0.98 0.01 160);
+  --color-popover: oklch(var(--inara-card));
+  --color-popover-foreground: oklch(0.98 0.01 160);
   --color-border: oklch(var(--inara-border));
+  --color-input: oklch(var(--inara-border));
+  --color-muted: oklch(var(--inara-muted));
+  --color-muted-foreground: oklch(0.80 0.02 160);
   
   --radius-xl: 0.75rem;
   --radius-lg: 0.5rem;
@@ -38,37 +42,23 @@
 }
 
 :root {
-  /* Inara Tokens (Light Mode - We favor Dark but maintain variables) */
-  --inara-primary: 0.75 0.18 155;
-  --inara-primary-light: 0.85 0.10 155;
-  --inara-primary-dark: 0.40 0.15 155;
-  --inara-accent: 0.70 0.25 330;
-  --inara-logic: 0.65 0.15 250;
-  --inara-bg: 0.98 0.01 160;
-  --inara-card: 1 0 0;
-  --inara-muted: 0.95 0.01 160;
-  --inara-border: 0.90 0.02 160;
-  --inara-shadow: 0.80 0.02 160;
+  /* Default Inara Tokens (Dynamic values injected via layout.tsx) */
+  --inara-primary: 0.82 0.15 142;
+  --inara-primary-light: 0.96 0.12 108;
+  --inara-primary-dark: 0.65 0.12 142;
+  --inara-accent: 0.96 0.12 108;
+  --inara-logic: 0.58 0.08 252;
+  --inara-bg: 0.32 0.10 265;
+  --inara-card: 0.38 0.08 265;
+  --inara-muted: 0.45 0.06 265;
+  --inara-border: 0.50 0.05 265;
+  --inara-shadow: 0.15 0.05 265;
 
-  --inara-ac: 0.78 0.18 145;
-  --inara-wa: 0.65 0.22 25;
-  --inara-tle: 0.88 0.15 85;
-  --inara-re: 0.62 0.20 300;
-  --inara-ce: 0.55 0.05 0;
-}
-
-.dark, :root {
-  /* Default to Dark Mode Style for nJudge */
-  --inara-primary: 0.75 0.18 155;
-  --inara-primary-light: 0.85 0.10 155;
-  --inara-primary-dark: 0.40 0.15 155;
-  --inara-accent: 0.70 0.25 330;
-  --inara-logic: 0.65 0.15 250;
-  --inara-bg: 0.12 0.02 160;
-  --inara-card: 0.16 0.03 160;
-  --inara-muted: 0.20 0.02 160;
-  --inara-border: 0.30 0.02 160;
-  --inara-shadow: 0.05 0.01 160;
+  --inara-ac: 0.82 0.15 142;
+  --inara-wa: 0.75 0.15 30;
+  --inara-tle: 0.90 0.15 80;
+  --inara-re: 0.65 0.15 320;
+  --inara-ce: 0.60 0.05 265;
 }
 
 @layer base {
@@ -77,7 +67,7 @@
   }
   body {
     @apply bg-inara-bg text-white font-sans selection:bg-inara-primary/30 selection:text-inara-primary;
-    background-image: radial-gradient(oklch(var(--inara-border) / 0.3) 1px, transparent 1px);
+    background-image: radial-gradient(oklch(var(--inara-border) / 0.2) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 }
@@ -118,7 +108,6 @@
 
   /* Problem Statement Enhancements */
   .problem-view {
-    /* Copying styles from inara-block directly to avoid @apply issues */
     @apply bg-inara-card border-[3px] border-inara-border rounded-md transition-all duration-300 p-8;
     box-shadow: 6px 6px 0px 0px oklch(var(--inara-shadow));
   }

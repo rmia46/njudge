@@ -1,49 +1,44 @@
 /**
- * Inara Color Palette v0.1
+ * Inara Color Palette v0.2 - NATURE-TECH (Single Theme)
  * 
- * Format: [Lightness (0-1), Chroma (0-0.4), Hue (0-360)]
- * All colors are defined in OKLCH for maximum vibrancy.
+ * Based on user-provided hex: #EEFABD, #A0D585, #6984A9, #263B6A
  */
 
 export const INARA_PALETTE = {
-  // Brand Colors
   primary: {
-    base: "0.75 0.18 155",    // Byte Green
-    light: "0.85 0.10 155",
-    dark: "0.40 0.15 155",
-    glow: "0.75 0.18 155 / 0.3",
+    base: "0.82 0.15 142",    // #A0D585 (Grounded Green)
+    light: "0.96 0.12 108",   // #EEFABD (Lime Highlight)
+    dark: "0.65 0.12 142",
+    glow: "0.82 0.15 142 / 0.3",
   },
   accent: {
-    base: "0.70 0.25 330",    // Glitch Pink
-    glow: "0.70 0.25 330 / 0.3",
+    base: "0.96 0.12 108",    // #EEFABD
+    glow: "0.96 0.12 108 / 0.3",
   },
-  logic: {
-    base: "0.65 0.15 250",    // Logic Blue
-    glow: "0.65 0.15 250 / 0.3",
+  secondary: {
+    base: "0.58 0.08 252",    // #6984A9 (Muted Blue)
+    glow: "0.58 0.08 252 / 0.3",
   },
 
   // Interface Surfaces
   monolith: {
-    bg: "0.12 0.02 160",      // Deepest Midnight
-    card: "0.16 0.03 160",    // Elevated block
-    muted: "0.22 0.02 160",   // Dithered areas
-    border: "0.35 0.02 160",  // Sharp pixel lines
-    shadow: "0.05 0.01 160",  // Solid shadow color
+    bg: "0.32 0.10 265",      // #263B6A (Deep Navy Base)
+    card: "0.38 0.08 265",    // Elevated navy
+    muted: "0.45 0.06 265",   // Intermediate
+    border: "0.50 0.05 265",  // Visible grid lines
+    shadow: "0.15 0.05 265",  // Deep solid shadow
   },
 
-  // Data States (Verdicts)
+  // State colors that fit the organic palette
   status: {
-    ac: "0.78 0.18 145",
-    wa: "0.65 0.22 25",
-    tle: "0.88 0.15 85",
-    re: "0.62 0.20 300",
-    ce: "0.55 0.05 0",
+    ac: "0.82 0.15 142",      // Same as primary green
+    wa: "0.75 0.15 30",       // Muted Coral/Red
+    tle: "0.90 0.15 80",      // Muted Yellow
+    re: "0.65 0.15 320",      // Muted Purple
+    ce: "0.60 0.05 265",      // Muted Gray-Blue
   }
 }
 
-/**
- * Returns a flattened object of CSS variables for injection into globals.css or root
- */
 export function getInaraVariables() {
   return {
     "--inara-primary": INARA_PALETTE.primary.base,
@@ -54,7 +49,7 @@ export function getInaraVariables() {
     "--inara-accent": INARA_PALETTE.accent.base,
     "--inara-accent-glow": INARA_PALETTE.accent.glow,
     
-    "--inara-logic": INARA_PALETTE.logic.base,
+    "--inara-logic": INARA_PALETTE.secondary.base,
     
     "--inara-bg": INARA_PALETTE.monolith.bg,
     "--inara-card": INARA_PALETTE.monolith.card,

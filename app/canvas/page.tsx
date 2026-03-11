@@ -28,10 +28,10 @@ export default function CanvasPage() {
           <h2 className="text-xs font-black opacity-40">01. Color Palette</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <ColorSwatch name="Primary" oklch={INARA_PALETTE.primary.base} label="Byte Green" />
-          <ColorSwatch name="Accent" oklch={INARA_PALETTE.accent.base} label="Glitch Pink" />
-          <ColorSwatch name="Logic" oklch={INARA_PALETTE.logic.base} label="Logic Blue" />
-          <ColorSwatch name="Surface" oklch={INARA_PALETTE.monolith.card} label="Monolith" />
+          <ColorSwatch name="Primary" oklch={INARA_PALETTE.primary.base} label="Grounded Green" />
+          <ColorSwatch name="Accent" oklch={INARA_PALETTE.accent.base} label="Lime Highlight" />
+          <ColorSwatch name="Secondary" oklch={INARA_PALETTE.secondary.base} label="Muted Blue" />
+          <ColorSwatch name="Surface" oklch={INARA_PALETTE.monolith.card} label="Deep Navy" />
           <ColorSwatch name="Border" oklch={INARA_PALETTE.monolith.border} label="Grid Line" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
