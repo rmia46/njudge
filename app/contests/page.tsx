@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Loader2, Search, Trophy, Users, Clock, Calendar, ChevronRight, Lock, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 export default function ContestsPage() {
   const [contests, setContests] = useState<any[]>([])
@@ -50,37 +51,38 @@ export default function ContestsPage() {
   const filteredContests = contests.filter(c => filter === 'all' || c.status === filter)
 
   return (
-    <main className="max-w-7xl mx-auto py-12 px-4 space-y-8 w-full">
+    <main className="max-w-7xl mx-auto py-12 px-4 space-y-10 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold tracking-tight">Contests</h1>
-          <p className="text-muted-foreground text-lg">Join ongoing challenges or practice with past problems.</p>
+        <div className="space-y-1">
+          <h1 className="text-5xl font-black tracking-tight text-inara-logic">Contest Arena</h1>
+          <p className="text-inara-logic/60 font-medium">Join challenges or practice with the global community.</p>
         </div>
-        <Button asChild className="bg-primary hover:bg-primary/90 h-11 font-bold shadow-lg">
+        <Button asChild className="inara-btn inara-btn-primary h-12 px-8 font-black">
           <Link href="/contests/create">
-            <Plus className="w-5 h-5 mr-2" /> Create Contest
+            <Plus className="w-5 h-5 mr-2" /> CREATE CONTEST
           </Link>
         </Button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-inara-logic/40" />
           <Input 
-            placeholder="Search contests by title..." 
-            className="pl-10 h-11"
+            placeholder="Search by title..." 
+            className="pl-11 h-12 border-2 border-inara-border bg-white font-medium focus-visible:ring-inara-primary/20"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex bg-muted/50 p-1 rounded-lg border">
+        <div className="flex bg-inara-muted/30 p-1 rounded-lg border-2 border-inara-border h-12">
           {(['all', 'active', 'upcoming', 'past'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${
-                filter === f ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={cn(
+                "px-6 rounded-md text-xs font-black uppercase tracking-widest transition-all",
+                filter === f ? "bg-white text-inara-primary shadow-sm" : "text-inara-logic/40 hover:text-inara-logic"
+              )}
             >
               {f}
             </button>
@@ -89,77 +91,87 @@ export default function ContestsPage() {
       </div>
 
       {isLoading ? (
-        <div className="py-24 flex justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>
+        <div className="py-24 flex justify-center text-inara-primary"><Loader2 className="w-10 h-10 animate-spin" /></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredContests.map((contest) => (
-            <ContestCard key={contest.id} contest={contest} />
-          ))}
-          {filteredContests.length === 0 && (
-            <div className="col-span-full py-24 text-center border-2 border-dashed rounded-3xl bg-muted/20">
-              <Trophy className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-              <p className="text-muted-foreground font-medium">No contests found matching your criteria.</p>
-            </div>
-          )}
+        <div className="inara-block overflow-hidden bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-inara-muted/20 border-b-2 border-inara-border">
+                <tr>
+                  <th className="p-4 text-[10px] font-black uppercase text-inara-logic/40 pl-8">Status</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-inara-logic/40">Contest Title</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-inara-logic/40 text-center">Start Time</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-inara-logic/40 text-center">Duration</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-inara-logic/40 text-center">Users</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-inara-logic/40 text-right pr-8">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y-2 divide-inara-border/5">
+                {filteredContests.map((contest) => (
+                  <ContestRow key={contest.id} contest={contest} />
+                ))}
+                {filteredContests.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-24 text-center">
+                      <Trophy className="w-12 h-12 text-inara-logic/10 mx-auto mb-4" />
+                      <p className="text-inara-logic/40 font-bold italic text-sm">No contests found matching your search.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </main>
   )
 }
 
-function ContestCard({ contest }: { contest: any }) {
-  const statusColors = {
-    active: 'bg-emerald-500 text-white shadow-emerald-500/20',
-    upcoming: 'bg-amber-500 text-white shadow-amber-500/20',
-    past: 'bg-slate-400 text-white'
+function ContestRow({ contest }: { contest: any }) {
+  const statusConfig = {
+    active: { label: 'Live', class: 'text-emerald-600 border-emerald-200 bg-emerald-50' },
+    upcoming: { label: 'Upcoming', class: 'text-amber-600 border-amber-200 bg-amber-50' },
+    past: { label: 'Ended', class: 'text-slate-400 border-slate-200 bg-slate-50' }
   }
-
+  const config = statusConfig[contest.status as keyof typeof statusConfig]
   const participantCount = contest.participants?.[0]?.count || 0
 
   return (
-    <Card className="group hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden border-2 flex flex-col h-full">
-      <CardHeader className="pb-4 relative">
-        <div className={`absolute top-4 right-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest shadow-lg ${statusColors[contest.status as keyof typeof statusColors]}`}>
-          {contest.status}
+    <tr className="hover:bg-inara-primary/5 transition-colors group">
+      <td className="p-4 pl-8">
+        <span className={cn("inara-badge border-2", config.class)}>{config.label}</span>
+      </td>
+      <td className="p-4">
+        <div className="flex flex-col gap-0.5">
+          <Link href={`/contests/${contest.id}`} className="font-bold text-inara-logic hover:text-inara-primary transition-colors text-base flex items-center gap-2">
+            {contest.title}
+            {contest.is_private && <Lock className="w-3 h-3 text-inara-logic/30" />}
+          </Link>
+          <span className="text-[10px] font-mono text-inara-logic/40 font-bold uppercase">{contest.ranking_rule} Rule</span>
         </div>
-        <CardTitle className="text-xl font-bold leading-tight pr-12 group-hover:text-primary transition-colors">
-          {contest.title}
-        </CardTitle>
-        <CardDescription className="line-clamp-2 mt-2 h-10">
-          {contest.description || 'Join this competitive programming challenge on nJudge.'}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4 flex-1">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-             <Calendar className="w-3.5 h-3.5" />
-             {new Date(contest.start_time).toLocaleDateString()}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-             <Clock className="w-3.5 h-3.5" />
-             {contest.duration_minutes} mins
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-             <Users className="w-3.5 h-3.5" />
-             {participantCount} joined
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-             <Trophy className="w-3.5 h-3.5" />
-             {contest.ranking_rule}
-          </div>
+      </td>
+      <td className="p-4 text-center">
+        <div className="flex flex-col items-center">
+          <span className="text-xs font-bold text-inara-logic/70">{new Date(contest.start_time).toLocaleDateString()}</span>
+          <span className="text-[10px] font-mono font-bold opacity-40">{new Date(contest.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
-      </CardContent>
-
-      <CardFooter className="bg-muted/30 border-t p-4 pt-4">
-        <Button asChild className="w-full font-bold group/btn" variant={contest.status === 'past' ? 'outline' : 'default'}>
+      </td>
+      <td className="p-4 text-center font-mono font-bold text-sm text-inara-logic/60">
+        {contest.duration_minutes}m
+      </td>
+      <td className="p-4 text-center">
+        <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-inara-logic/5 border border-inara-border/10">
+          <Users className="w-3 h-3 text-inara-logic/40" />
+          <span className="text-xs font-black text-inara-logic/70">{participantCount}</span>
+        </div>
+      </td>
+      <td className="p-4 text-right pr-8">
+        <Button asChild variant="ghost" className="h-9 w-9 p-0 group-hover:bg-inara-primary group-hover:text-white transition-all border-2 border-transparent group-hover:border-inara-primary-dark">
           <Link href={`/contests/${contest.id}`}>
-            {contest.is_private && <Lock className="w-3.5 h-3.5 mr-2" />}
-            {contest.status === 'active' ? 'Enter Contest' : contest.status === 'upcoming' ? 'Join Now' : 'Upsolve Problems'}
-            <ChevronRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+            <ChevronRight className="w-5 h-5" />
           </Link>
         </Button>
-      </CardFooter>
-    </Card>
+      </td>
+    </tr>
   )
 }
