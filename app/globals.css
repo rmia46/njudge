@@ -115,11 +115,13 @@
   .inara-badge {
     @apply px-2 py-0.5 border-2 border-current rounded-md font-mono text-[10px] font-black uppercase;
   }
-}
 
-/* Problem Statement Enhancements */
-.problem-view {
-  @apply inara-block p-8;
+  /* Problem Statement Enhancements */
+  .problem-view {
+    /* Copying styles from inara-block directly to avoid @apply issues */
+    @apply bg-inara-card border-[3px] border-inara-border rounded-xl transition-all duration-300 p-8;
+    box-shadow: 6px 6px 0px 0px oklch(var(--inara-shadow));
+  }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
