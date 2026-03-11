@@ -8,19 +8,14 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    console.log('ProblemStatement: Rendering HTML, length:', html?.length, 'OJ:', oj);
-    
     // 1. MathJax Initialization and Trigger
     const scriptId = 'mathjax-script'
     
     const triggerMathJax = () => {
       if (window.MathJax && window.MathJax.typesetPromise) {
-        console.log('ProblemStatement: Triggering MathJax typesetting...');
         window.MathJax.typesetPromise([containerRef.current]).catch((err: any) => 
           console.error('MathJax typeset failed:', err)
         )
-      } else {
-        console.warn('ProblemStatement: MathJax not ready for typesetting');
       }
     }
 
@@ -30,7 +25,10 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
           inlineMath: [['$', '$'], ['\\(', '\\)'], ['$$$', '$$$']],
           displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' },
+        svg: { 
+          fontCache: 'global',
+          scale: 1.1
+        },
         startup: {
           pageReady: () => {
             return window.MathJax.startup.defaultPageReady().then(triggerMathJax)
@@ -52,7 +50,7 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
   return (
     <div className="problem-view inara-block p-8 bg-white min-h-[400px]">
       {/* Problem Metadata Strip */}
-      <div className="flex flex-wrap gap-8 mb-10 pb-8 border-b-2 border-inara-border/10">
+      <div className="flex flex-wrap gap-8 mb-8 pb-6 border-b-2 border-inara-border/10">
         {timeLimit && (
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-bold uppercase text-inara-primary tracking-widest">Time Limit</span>
@@ -81,60 +79,93 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
       />
       
       <style jsx global>{`
-        /* Reset original styles that clash with our light theme */
+        /* Reset original styles - HIDE REDUNDANT DATA */
         .problem-view .header, 
         .problem-view .property-title,
         .problem-view .time-limit,
         .problem-view .memory-limit,
         .problem-view .input-file,
-        .problem-view .output-file {
+        .problem-view .output-file { 
+          display: none !important; 
+        }
+
+        /* Hide original section titles inside samples to prevent "Input" "Input" double text */
+        .problem-view .sample-test .section-title,
+        .problem-view .sample-test .title {
           display: none !important;
         }
 
-        /* Ensure all text inside the statement uses our navy color */
-        .problem-view .problem-statement,
-        .problem-view .problem-statement div,
-        .problem-view .problem-statement p,
-        .problem-view .problem-statement span {
-          color: var(--inara-logic) !important;
+        /* Very Compact Vertical Samples */
+        .problem-view .sample-tests {
+          margin-top: 1.5rem !important;
         }
-
-        /* Standardize Section Titles */
-        .problem-view .section-title, 
-        .problem-view h2, 
-        .problem-view h3 { 
-          font-family: var(--font-vt323) !important;
-          font-weight: 400 !important;
-          font-size: 1.75rem !important;
-          color: var(--inara-primary) !important;
-          margin-top: 2.5rem !important;
+        .problem-view .sample-test {
           margin-bottom: 1rem !important;
-          border-bottom: 2px solid color-mix(in oklch, var(--inara-primary), transparent 80%) !important;
-          padding-bottom: 0.25rem !important;
-          text-transform: none !important;
+          border: 2px solid var(--inara-border) !important;
+          border-radius: 0.5rem !important;
+          overflow: hidden;
+        }
+        
+        .problem-view .input, .problem-view .output {
+          padding: 0 !important;
         }
 
-        /* Formatted Code Blocks (Samples) */
+        .problem-view .input::before, .problem-view .output::before {
+          display: block;
+          padding: 0.375rem 0.75rem;
+          background: oklch(var(--inara-muted));
+          font-family: var(--font-vt323);
+          font-size: 1.25rem;
+          color: var(--inara-primary);
+          font-weight: 400;
+          border-bottom: 2px solid var(--inara-border);
+        }
+        .problem-view .input::before { content: "Input"; }
+        .problem-view .output::before { content: "Output"; }
+        
+        .problem-view .output {
+          border-top: 2px solid var(--inara-border) !important;
+        }
+
         .problem-view pre { 
-          background: oklch(var(--inara-muted)) !important; 
-          padding: 1.25rem !important; 
-          border-radius: 0.5rem !important; 
+          background: oklch(var(--inara-muted) / 0.1) !important; 
+          padding: 0.75rem !important; 
+          margin: 0 !important;
           font-family: var(--font-jetbrains) !important; 
-          font-size: 0.875rem !important;
-          border: 2px dashed color-mix(in oklch, var(--inara-primary), transparent 70%) !important;
-          margin: 1rem 0 !important;
+          font-size: 0.8125rem !important;
+          line-height: 1.4 !important;
           color: var(--inara-logic) !important;
-          overflow-x: auto !important;
+          border: none !important;
         }
 
-        /* LaTeX / Math Elements */
+        /* Generic Code and Mono formatting */
+        .problem-view code, .problem-view tt, .problem-view .tex-font-size-small {
+          font-family: var(--font-jetbrains) !important;
+          background: oklch(var(--inara-muted) / 0.4) !important;
+          padding: 0.1rem 0.2rem !important;
+          border-radius: 0.25rem !important;
+          font-size: 0.9em !important;
+          color: var(--inara-primary-dark) !important;
+        }
+
+        /* MathJax (LaTeX) Styling - Authentic Serif Math */
         mjx-container {
-          color: var(--inara-primary) !important;
-          font-size: 110% !important;
+          color: var(--inara-logic) !important;
+          font-family: 'MathJax_Main', 'Times New Roman', serif !important;
         }
 
-        /* AtCoder specific cleanup */
-        .problem-view .lang-en { display: block !important; }
+        /* Section Titles */
+        .problem-view .section-title, .problem-view h2, .problem-view h3 { 
+          font-family: var(--font-vt323) !important;
+          font-size: 1.375rem !important;
+          color: var(--inara-primary) !important;
+          margin-top: 1.5rem !important;
+          margin-bottom: 0.5rem !important;
+          border-bottom: 1px solid var(--inara-border) !important;
+          padding-bottom: 0.125rem !important;
+        }
+
+        /* Hide language specific noise */
         .problem-view .lang-ja { display: none !important; }
       `}</style>
     </div>
