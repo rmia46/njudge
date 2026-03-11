@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nJudge
 
-## Getting Started
+nJudge is a modern, distributed alternative to VJudge, designed for **Codeforces** and **AtCoder**. It bypasses server-side bot detection by using a client-side browser extension bridge.
 
-First, run the development server:
+## 🚀 Getting Started (Local Development)
 
+nJudge uses a dual-development workflow: a Next.js web app and a browser extension.
+
+### 1. Prerequisite: Supabase CLI
+nJudge relies on a local Supabase stack for development.
+
+1.  **Install Docker:** Ensure Docker is installed and running on your system.
+2.  **Initialize & Start:**
+    ```bash
+    npx supabase init
+    npx supabase start
+    ```
+3.  **Apply Migrations:**
+    ```bash
+    npx supabase db reset
+    ```
+4.  **Configure Environment:**
+    Copy the `API URL` and `anon key` from the console output and create a `.env.local` file:
+    ```bash
+    NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
+    ```
+
+### 2. Run the Next.js Web App
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Run the Browser Extension (Firefox)
+To develop the extension with auto-reloading:
+```bash
+npm run dev:extension:firefox
+```
+This will launch a dedicated Firefox instance with the **nJudge Bridge** pre-loaded. Any changes made to the `extension/` folder will automatically trigger a reload.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/`: Next.js frontend and API routes.
+- `components/`: Modular UI components (shadcn based).
+- `extension/`: Browser extension source code (Background and Content scripts).
+- `supabase/`: Database migrations and configuration.
+- `lib/`: Shared utilities, theme engine, and ranking logic.
 
-## Learn More
+## 🌈 Key Features
 
-To learn more about Next.js, take a look at the following resources:
+- **Distributed Bridge:** Submissions happen from the user's browser, ensuring zero IP blocks.
+- **Real-time Standings:** Live leaderboards powered by Supabase Realtime.
+- **Smart Scraper:** Automatic problem metadata and statement fetching.
+- **Unified Themes:** Custom Emerald and Midnight themes with OKLCH color support.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📜 License
+MIT
