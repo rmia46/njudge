@@ -31,10 +31,10 @@
   --color-card: oklch(var(--inara-card));
   --color-border: oklch(var(--inara-border));
   
-  --radius-xl: 1.5rem;
-  --radius-lg: 1rem;
-  --radius-md: 0.5rem;
-  --radius-sm: 0.25rem;
+  --radius-xl: 0.75rem;
+  --radius-lg: 0.5rem;
+  --radius-md: 0.25rem;
+  --radius-sm: 0.125rem;
 }
 
 :root {
@@ -85,7 +85,7 @@
 @layer components {
   /* Inara Bit-Art Blocks */
   .inara-block {
-    @apply bg-inara-card border-[3px] border-inara-border rounded-xl transition-all duration-300;
+    @apply bg-inara-card border-[3px] border-inara-border rounded-md transition-all duration-300;
     box-shadow: 6px 6px 0px 0px oklch(var(--inara-shadow));
   }
 
@@ -98,7 +98,7 @@
   /* Tactile Buttons */
   .inara-btn {
     @apply relative inline-flex items-center justify-center px-6 py-2 font-black uppercase tracking-wider 
-           border-[3px] border-inara-border rounded-xl transition-all active:translate-y-[4px] active:shadow-none;
+           border-[3px] border-inara-border rounded-sm transition-all active:translate-y-[2px] active:shadow-none;
     box-shadow: 0px 4px 0px 0px oklch(var(--inara-shadow));
   }
 
@@ -113,13 +113,13 @@
 
   /* Pixel Badges */
   .inara-badge {
-    @apply px-2 py-0.5 border-2 border-current rounded-md font-mono text-[10px] font-black uppercase;
+    @apply px-2 py-0.5 border-2 border-current rounded-sm font-mono text-[10px] font-black uppercase;
   }
 
   /* Problem Statement Enhancements */
   .problem-view {
     /* Copying styles from inara-block directly to avoid @apply issues */
-    @apply bg-inara-card border-[3px] border-inara-border rounded-xl transition-all duration-300 p-8;
+    @apply bg-inara-card border-[3px] border-inara-border rounded-md transition-all duration-300 p-8;
     box-shadow: 6px 6px 0px 0px oklch(var(--inara-shadow));
   }
 }
