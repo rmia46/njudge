@@ -157,7 +157,7 @@ export default function ProblemPage() {
   if (!problem) return <div className="flex justify-center p-24 text-inara-primary"><Loader2 className="animate-spin" /></div>
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 space-y-8">
+    <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
       {/* 1. Static Problem Header */}
       <header className="space-y-4">
         <div className="flex justify-between items-start">

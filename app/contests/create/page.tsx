@@ -208,7 +208,7 @@ export default function CreateContest() {
   }
 
   return (
-    <main className="max-w-5xl mx-auto py-12 px-4 w-full">
+    <main className="max-w-7xl mx-auto py-12 px-4 w-full">
       <div className="mb-8 space-y-2">
         <h1 className="text-4xl font-extrabold tracking-tight">Organize Contest</h1>
         <p className="text-muted-foreground text-lg italic">Build your challenge, invite participants, and watch the leaderboard.</p>
