@@ -1,4 +1,4 @@
-# Inara Theme Framework v0.1: Bit-Art Digitalism
+# Inara Theme Framework v0.5: Bit-Art Digitalism
 *Modular. Pixelated. Precision-Engineered Joy.*
 
 Inara is a specialized design system for nJudge. It is built on the philosophy that software for programmers should feel like a high-end tool but look like a vibrant adventure. It uses "Pixel Art" as a metaphor for the "Byte" — the fundamental unit of our craft.

@@ -174,23 +174,6 @@ export default function ProblemPage() {
             </a>
           </Button>
         </div>
-
-        <div className="flex flex-wrap gap-3">
-          {problem.time_limit && (
-            <div className="inara-block bg-white px-4 py-1.5 flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 text-inara-primary" />
-              <span className="inara-data font-bold uppercase text-[10px]">Time Limit:</span>
-              <span className="text-xs font-bold text-inara-logic">{problem.time_limit}</span>
-            </div>
-          )}
-          {problem.memory_limit && (
-            <div className="inara-block bg-white px-4 py-1.5 flex items-center gap-2">
-              <BarChart3 className="w-3.5 h-3.5 text-inara-primary" />
-              <span className="inara-data font-bold uppercase text-[10px]">Memory Limit:</span>
-              <span className="text-xs font-bold text-inara-logic">{problem.memory_limit}</span>
-            </div>
-          )}
-        </div>
       </header>
 
       {/* 2. Main Tabbed Layout */}
@@ -204,7 +187,12 @@ export default function ProblemPage() {
 
         <TabsContent value="statement" className="focus-visible:outline-none min-h-[400px]">
           {problem.statement_html ? (
-            <ProblemStatement html={problem.statement_html} oj={problem.oj} />
+            <ProblemStatement 
+              html={problem.statement_html} 
+              oj={problem.oj} 
+              timeLimit={problem.time_limit}
+              memoryLimit={problem.memory_limit}
+            />
           ) : (
             <div className="inara-block p-20 text-center italic opacity-40">No description available for this problem.</div>
           )}

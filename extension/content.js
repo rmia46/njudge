@@ -3,6 +3,11 @@ console.log('nJudge Bridge: Content Script Loaded');
 
 const api = typeof browser !== 'undefined' ? browser : chrome;
 
+// Small delay to ensure bridge is ready
+setTimeout(() => {
+  console.log('nJudge Bridge [Content]: System Online');
+}, 500);
+
 // Listen for messages FROM the Web App
 window.addEventListener('message', (event) => {
   if (event.source !== window) return;
@@ -15,22 +20,20 @@ window.addEventListener('message', (event) => {
 
   console.log('nJudge Bridge [Content]: Forwarding request to background:', data.type);
   
-  api.runtime.sendMessage(data, (response) => {
-    // If background used sendResponse, we get it here
-    if (chrome.runtime.lastError) {
-      console.error('nJudge Bridge [Content]: Runtime error:', chrome.runtime.lastError);
-      return;
-    }
-
-    console.log('nJudge Bridge [Content]: Received response from background for:', data.type);
-    
-    // Send response back to Web App
-    window.postMessage({
-      type: data.type + '_RESPONSE',
-      payload: response,
-      requestId: data.requestId
-    }, '*');
-  });
+  try {
+    api.runtime.sendMessage(data, (response) => {
+      // Firefox might return response directly or through callback depending on version/setup
+      const finalResponse = response || { status: 'error', message: 'No response from background' };
+      
+      console.log('nJudge Bridge [Content]: Received response from background for:', data.type);
+      
+      window.postMessage({
+        type: data.type + '_RESPONSE',
+        payload: finalResponse,
+        requestId: data.requestId
+      }, '*');
+    });
+  } catch (err) {
+    console.error('nJudge Bridge [Content]: Failed to send to background:', err);
+  }
 });
-
-// REMOVED: api.runtime.onMessage.addListener - This was likely causing echoes.

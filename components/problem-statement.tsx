@@ -1,19 +1,26 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { Clock, BarChart3 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-export function ProblemStatement({ html, oj }: { html: string, oj: string }) {
+export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: string, oj: string, timeLimit?: string, memoryLimit?: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    console.log('ProblemStatement: Rendering HTML, length:', html?.length, 'OJ:', oj);
+    
     // 1. MathJax Initialization and Trigger
     const scriptId = 'mathjax-script'
     
     const triggerMathJax = () => {
       if (window.MathJax && window.MathJax.typesetPromise) {
+        console.log('ProblemStatement: Triggering MathJax typesetting...');
         window.MathJax.typesetPromise([containerRef.current]).catch((err: any) => 
           console.error('MathJax typeset failed:', err)
         )
+      } else {
+        console.warn('ProblemStatement: MathJax not ready for typesetting');
       }
     }
 
@@ -37,19 +44,39 @@ export function ProblemStatement({ html, oj }: { html: string, oj: string }) {
       script.async = true
       document.head.appendChild(script)
     } else {
-      // Small delay to ensure DOM is updated before typesetting
-      setTimeout(triggerMathJax, 100)
+      setTimeout(triggerMathJax, 200)
+      setTimeout(triggerMathJax, 1000)
     }
-  }, [html])
+  }, [html, oj])
 
   return (
     <div className="problem-view inara-block p-8 bg-white min-h-[400px]">
+      {/* Problem Metadata Strip */}
+      <div className="flex flex-wrap gap-8 mb-10 pb-8 border-b-2 border-inara-border/10">
+        {timeLimit && (
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase text-inara-primary tracking-widest">Time Limit</span>
+            <div className="flex items-center gap-2 font-mono text-sm font-bold text-inara-logic">
+              <Clock className="w-4 h-4 text-inara-primary" /> {timeLimit}
+            </div>
+          </div>
+        )}
+        {memoryLimit && (
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase text-inara-primary tracking-widest">Memory Limit</span>
+            <div className="flex items-center gap-2 font-mono text-sm font-bold text-inara-logic">
+              <BarChart3 className="w-4 h-4 text-inara-primary" /> {memoryLimit}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div 
         ref={containerRef}
-        className={`prose prose-slate max-w-none 
-          prose-pre:p-0 prose-pre:bg-transparent
-          text-inara-logic leading-relaxed
-          ${oj === 'CF' ? 'cf-styles' : 'ac-styles'}`}
+        className={cn(
+          "prose prose-slate max-w-none text-inara-logic leading-relaxed",
+          oj === 'CF' ? 'cf-styles' : 'ac-styles'
+        )}
         dangerouslySetInnerHTML={{ __html: html }}
       />
       
@@ -62,6 +89,14 @@ export function ProblemStatement({ html, oj }: { html: string, oj: string }) {
         .problem-view .input-file,
         .problem-view .output-file {
           display: none !important;
+        }
+
+        /* Ensure all text inside the statement uses our navy color */
+        .problem-view .problem-statement,
+        .problem-view .problem-statement div,
+        .problem-view .problem-statement p,
+        .problem-view .problem-statement span {
+          color: var(--inara-logic) !important;
         }
 
         /* Standardize Section Titles */

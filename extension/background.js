@@ -6,7 +6,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'NJUDGE_PING') {
     sendResponse({ status: 'ok', message: 'Pong!' });
-    return true;
+    return false;
   }
 
   if (request.type === 'NJUDGE_SCRAPE_PROBLEM') {
@@ -30,7 +30,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  return true;
+  sendResponse({ status: 'error', message: 'Unknown request type: ' + request.type });
+  return false;
 });
 
 async function handleCustomTest({ oj, code, languageId, input }) {
@@ -86,44 +87,66 @@ async function handleScrapeProblem({ oj, id }) {
   try {
     if (oj === 'CF') {
       const match = id.match(/^(\d+)([A-Z]\d*)$/);
-      if (!match) throw new Error('Invalid Codeforces ID');
+      if (!match) throw new Error('Invalid Codeforces ID (e.g. 123A)');
       const contestId = match[1];
       const problemIndex = match[2];
+      
       const urls = [
         `https://codeforces.com/contest/${contestId}/problem/${problemIndex}`,
-        `https://codeforces.com/problemset/problem/${contestId}/${problemIndex}`
+        `https://codeforces.com/problemset/problem/${contestId}/${problemIndex}`,
+        `https://codeforces.com/gym/${contestId}/problem/${problemIndex}`
       ];
 
       for (const targetUrl of urls) {
         try {
           const response = await fetch(targetUrl);
           if (!response.ok) continue;
+          
           const finalUrl = response.url;
-          if (!finalUrl.includes(contestId) || !finalUrl.toLowerCase().includes(problemIndex.toLowerCase())) continue;
+          // Check for redirects to non-problem pages
+          if (!finalUrl.includes(contestId) || !finalUrl.toLowerCase().includes(problemIndex.toLowerCase())) {
+            if (!finalUrl.includes('problemset') && !finalUrl.includes('contest')) continue;
+          }
+
           const html = await response.text();
           
-          const titleMatch = html.match(/<div class="title">(.+?)<\/div>/);
-          const title = titleMatch ? titleMatch[1].replace(/^[A-Z]\d*\.\s+/, '').trim() : 'Unknown';
+          // 1. Title
+          const divMatch = html.match(/<div class="title">[\s\S]*?([A-Z]\d*[\.\s]+)?([^<]+)<\/div>/);
+          const title = divMatch ? divMatch[2].trim() : '';
 
-          // Extract EVERYTHING inside the problem statement
-          const statementMatch = html.match(/<div class="problem-statement">([\s\S]*?)<\/div>\s*<script/);
-          let statementHtml = statementMatch ? statementMatch[1] : '';
+          // 2. Statement & Metadata
+          let statementHtml = '';
+          let timeLimit = '1.0s';
+          let memoryLimit = '256MB';
+
+          const startIdx = html.indexOf('<div class="problem-statement">');
+          const endIdx = html.indexOf('<script', startIdx);
           
-          // Generic clean: remove only the outer header
-          statementHtml = statementHtml.replace(/<div class="header">[\s\S]*?<\/div>/, '');
+          if (startIdx !== -1 && endIdx !== -1) {
+            statementHtml = html.substring(startIdx, endIdx);
+            
+            // Extract metadata from raw HTML if possible
+            const tMatch = statementHtml.match(/<div class="time-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
+            const mMatch = statementHtml.match(/<div class="memory-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
+            
+            if (tMatch) timeLimit = tMatch[1].trim();
+            if (mMatch) memoryLimit = mMatch[1].trim();
 
-          const tMatch = html.match(/<div class="time-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
-          const mMatch = html.match(/<div class="memory-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
+            // Clean the header from statement
+            statementHtml = statementHtml.replace(/<div class="header">[\s\S]*?<\/div>/, '');
+          }
 
-          return { title, url: finalUrl, statementHtml, timeLimit: tMatch?.[1].trim(), memoryLimit: mMatch?.[1].trim() };
+          if (title || statementHtml) {
+            return { title: title || 'Problem ' + id, url: finalUrl, statementHtml, timeLimit, memoryLimit };
+          }
         } catch (e) { }
       }
-      throw new Error('Problem Not Found');
+      throw new Error('Problem Not Found on Codeforces');
     }
     
     if (oj === 'AC') {
       const match = id.match(/^([a-z0-9]+)_([a-z0-9]+)$/);
-      if (!match) throw new Error('Invalid AtCoder ID');
+      if (!match) throw new Error('Invalid AtCoder ID (e.g. abc344_a)');
       const contestId = match[1];
       const targetUrl = `https://atcoder.jp/contests/${contestId}/tasks/${id}`;
       const response = await fetch(targetUrl);
@@ -133,11 +156,9 @@ async function handleScrapeProblem({ oj, id }) {
       const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
       const title = titleTagMatch?.[1].split(' - ')[1]?.trim() || 'Unknown';
 
-      // Capturing the whole section for AtCoder
       const statementMatch = html.match(/<div id="task-statement">([\s\S]*?)<\/div>\s*<div class="button-pannel">/);
       let statementHtml = statementMatch ? statementMatch[1] : '';
 
-      // Clean AtCoder Japanese sections specifically
       statementHtml = statementHtml.replace(/<span class="lang-ja">[\s\S]*?<\/span>/g, '');
       statementHtml = statementHtml.replace(/<span class="lang-en">([\s\S]*?)<\/span>/, '$1');
 

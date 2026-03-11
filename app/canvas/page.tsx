@@ -11,7 +11,7 @@ export default function CanvasPage() {
     <main className="max-w-7xl mx-auto py-12 px-4 space-y-16 w-full">
       <header className="space-y-4">
         <div className="inline-block px-3 py-1 rounded-md bg-inara-primary/10 border-2 border-inara-primary/20 text-inara-primary text-[10px] font-bold tracking-widest">
-          Inara Lab v0.1
+          Inara Lab v0.5
         </div>
         <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-inara-logic">
           Design <span className="text-inara-primary">Canvas</span>
