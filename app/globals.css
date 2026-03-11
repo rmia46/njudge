@@ -40,6 +40,8 @@
   --radius-lg: 0.5rem;
   --radius-md: 0.25rem;
   --radius-sm: 0.125rem;
+
+  --font-mono: var(--font-vt323), monospace;
 }
 
 :root {
@@ -95,12 +97,14 @@
     @apply bg-inara-primary text-white border-inara-primary-dark hover:bg-inara-primary-dark;
   }
 
+  /* Nerdy Data Display - Optimized for VT323 */
   .inara-data {
-    @apply font-mono font-bold tracking-tight text-inara-logic;
+    @apply font-mono font-normal text-lg tracking-normal text-inara-logic leading-none;
   }
 
+  /* Pixel Badges - Optimized for VT323 */
   .inara-badge {
-    @apply px-2 py-0.5 border-2 border-current rounded-sm font-mono text-[10px] font-bold;
+    @apply px-2 py-0.5 border-2 border-current rounded-sm font-mono text-sm font-normal;
   }
 
   .problem-view {
