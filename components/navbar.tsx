@@ -73,15 +73,15 @@ export function Navbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 inara-block bg-inara-card p-1">
-              <div className="px-3 py-2 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-inara-border mb-1">Theme Control</div>
+              <div className="px-3 py-2 text-[10px] font-black text-white/40 uppercase tracking-widest border-b border-inara-border mb-1">Appearance</div>
               <DropdownMenuItem onClick={() => { setCurrentTheme('emerald'); applyTheme('emerald'); }} className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg">
                 <div className="h-4 w-4 rounded-md bg-inara-primary border-2 border-inara-primary-dark" />
-                <span className="font-bold text-xs uppercase tracking-tight">Inara Emerald</span>
+                <span className="font-bold text-xs uppercase tracking-tight">Emerald Theme</span>
                 {currentTheme === 'emerald' && <CheckCircle2 className="w-3 h-3 ml-auto text-inara-primary" />}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { setCurrentTheme('midnight'); applyTheme('midnight'); }} className="gap-3 cursor-pointer py-2 focus:bg-inara-accent/10 rounded-lg">
                 <div className="h-4 w-4 rounded-md bg-inara-accent border-2 border-inara-accent/50" />
-                <span className="font-bold text-xs uppercase tracking-tight">Inara Midnight</span>
+                <span className="font-bold text-xs uppercase tracking-tight">Midnight Theme</span>
                 {currentTheme === 'midnight' && <CheckCircle2 className="w-3 h-3 ml-auto text-inara-accent" />}
               </DropdownMenuItem>
               
@@ -132,13 +132,13 @@ export function Navbar() {
                 <Link href="/profile">
                   <DropdownMenuItem className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg text-white">
                     <UserIcon className="w-4 h-4 text-inara-primary" />
-                    <span className="font-bold text-xs uppercase tracking-tight">Command Profile</span>
+                    <span className="font-bold text-xs uppercase tracking-tight">My Profile</span>
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/contests/create">
                   <DropdownMenuItem className="gap-3 cursor-pointer py-2 focus:bg-inara-primary/10 rounded-lg text-white">
                     <PlusCircle className="w-4 h-4 text-inara-primary" />
-                    <span className="font-bold text-xs uppercase tracking-tight">New Contest</span>
+                    <span className="font-bold text-xs uppercase tracking-tight">Create Contest</span>
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator className="bg-inara-border h-[2px]" />
@@ -147,7 +147,7 @@ export function Navbar() {
                   onClick={() => supabase.auth.signOut().then(() => window.location.href = '/')}
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="font-bold text-xs uppercase tracking-tight">Terminate Session</span>
+                  <span className="font-bold text-xs uppercase tracking-tight">Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -155,7 +155,7 @@ export function Navbar() {
             <Button asChild className="inara-btn inara-btn-primary h-10 px-6 text-xs shadow-none">
               <Link href="/login">
                 <LogIn className="w-4 h-4 mr-2" />
-                Auth Input
+                Sign In
               </Link>
             </Button>
           )}
