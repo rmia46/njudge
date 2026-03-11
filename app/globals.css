@@ -7,6 +7,8 @@
 @theme inline {
   /* Inara Theme Bridge */
   --color-inara-primary: oklch(var(--inara-primary));
+  --color-inara-primary-light: oklch(var(--inara-primary-light));
+  --color-inara-primary-dark: oklch(var(--inara-primary-dark));
   --color-inara-accent: oklch(var(--inara-accent));
   --color-inara-logic: oklch(var(--inara-logic));
   --color-inara-bg: oklch(var(--inara-bg));
@@ -38,6 +40,8 @@
 :root {
   /* Inara Tokens (Light Mode - We favor Dark but maintain variables) */
   --inara-primary: 0.75 0.18 155;
+  --inara-primary-light: 0.85 0.10 155;
+  --inara-primary-dark: 0.40 0.15 155;
   --inara-accent: 0.70 0.25 330;
   --inara-logic: 0.65 0.15 250;
   --inara-bg: 0.98 0.01 160;
@@ -56,6 +60,8 @@
 .dark, :root {
   /* Default to Dark Mode Style for nJudge */
   --inara-primary: 0.75 0.18 155;
+  --inara-primary-light: 0.85 0.10 155;
+  --inara-primary-dark: 0.40 0.15 155;
   --inara-accent: 0.70 0.25 330;
   --inara-logic: 0.65 0.15 250;
   --inara-bg: 0.12 0.02 160;
