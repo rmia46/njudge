@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { Figtree, VT323 } from "next/font/google";
+import { Inter, VT323, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Toaster } from "sonner";
 import { getInaraVariables } from "@/lib/inara-colors";
 
-const figtree = Figtree({
-  variable: "--font-figtree",
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
 });
 
@@ -30,7 +35,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" style={inaraVars as React.CSSProperties}>
-      <body className={`${figtree.variable} ${vt323.variable} antialiased min-h-screen bg-inara-bg transition-colors duration-500`}>
+      <body className={`${inter.variable} ${jetbrains.variable} ${vt323.variable} antialiased min-h-screen bg-inara-bg transition-colors duration-500`}>
         <Navbar />
         {children}
         <Toaster richColors position="top-right" />

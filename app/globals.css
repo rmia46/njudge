@@ -24,7 +24,7 @@
 
   /* Shadcn Overrides - Light Mode Tuning */
   --color-background: oklch(var(--inara-bg));
-  --color-foreground: oklch(var(--inara-border)); /* Using Navy for text */
+  --color-foreground: oklch(var(--inara-border)); 
   --color-primary: oklch(var(--inara-primary));
   --color-primary-foreground: white;
   --color-card: oklch(var(--inara-card));
@@ -41,7 +41,10 @@
   --radius-md: 0.25rem;
   --radius-sm: 0.125rem;
 
-  --font-mono: var(--font-vt323), monospace;
+  /* Typography Mapping */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
+  --font-mono: var(--font-jetbrains), monospace;
+  --font-pixel: var(--font-vt323), cursive;
 }
 
 :root {
@@ -73,6 +76,9 @@
     background-image: radial-gradient(oklch(var(--inara-border) / 0.1) 1px, transparent 1px);
     background-size: 24px 24px;
   }
+  h1, h2, h3, .inara-title {
+    @apply font-[family-name:var(--font-vt323)] tracking-normal;
+  }
 }
 
 @layer components {
@@ -97,14 +103,14 @@
     @apply bg-inara-primary text-white border-inara-primary-dark hover:bg-inara-primary-dark;
   }
 
-  /* Nerdy Data Display - Optimized for VT323 */
+  /* Nerdy Data Display - Optimized for JetBrains Mono */
   .inara-data {
-    @apply font-mono font-normal text-lg tracking-normal text-inara-logic leading-none;
+    @apply font-mono font-bold text-sm tracking-tight text-inara-logic leading-none;
   }
 
   /* Pixel Badges - Optimized for VT323 */
   .inara-badge {
-    @apply px-2 py-0.5 border-2 border-current rounded-sm font-mono text-sm font-normal;
+    @apply px-2 py-0.5 border-2 border-current rounded-sm font-[family-name:var(--font-vt323)] text-lg font-normal leading-none;
   }
 
   .problem-view {
