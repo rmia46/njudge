@@ -92,14 +92,20 @@ export function ProblemStatement({ html, oj, timeLimit, memoryLimit }: { html: s
           font-weight: 400 !important;
         }
 
-        /* Mono Elements (JetBrains Mono) */
-        .oj-content code, .oj-content tt, .oj-content .tex-font-size-small {
+        /* Mono Elements (JetBrains Mono) - Expanded for CF specific classes */
+        .oj-content code, 
+        .oj-content tt, 
+        .oj-content .tex-font-size-small, 
+        .oj-content .tex-font-style-tt, 
+        .oj-content .monospace,
+        .oj-content .tex-span {
           font-family: var(--font-jetbrains) !important;
-          background: oklch(var(--inara-muted) / 0.4) !important;
-          padding: 0.1rem 0.2rem !important;
+          background: oklch(var(--inara-muted) / 0.3) !important;
+          padding: 0.1rem 0.3rem !important;
           border-radius: 0.25rem !important;
           font-size: 0.9em !important;
           color: var(--inara-primary-dark) !important;
+          font-weight: 600 !important;
         }
 
         /* Sample Tests Styling (VJudge Style) */
