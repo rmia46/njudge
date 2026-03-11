@@ -51,6 +51,16 @@ export function ProblemStatement({ html, oj }: { html: string, oj: string }) {
       
       {/* Dynamic Copy Button Logic Injector */}
       <style jsx global>{`
+        /* Hide original headers since we show them in our UI */
+        .problem-statement .header, 
+        .problem-statement .property-title,
+        .problem-statement .time-limit,
+        .problem-statement .memory-limit,
+        .problem-statement .input-file,
+        .problem-statement .output-file {
+          display: none !important;
+        }
+
         /* Codeforces Sections mapping */
         .problem-statement .input-specification::before { content: "Input"; display: block; font-weight: 800; font-size: 1.25rem; color: var(--primary); margin-top: 2rem; margin-bottom: 0.75rem; border-bottom: 2px solid color-mix(in oklch, var(--primary), transparent 90%); padding-bottom: 0.25rem; text-transform: uppercase; }
         .problem-statement .output-specification::before { content: "Output"; display: block; font-weight: 800; font-size: 1.25rem; color: var(--primary); margin-top: 2rem; margin-bottom: 0.75rem; border-bottom: 2px solid color-mix(in oklch, var(--primary), transparent 90%); padding-bottom: 0.25rem; text-transform: uppercase; }

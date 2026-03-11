@@ -213,16 +213,22 @@ export default function ProblemPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex flex-wrap gap-3">
-                  <div className="bg-primary/5 px-4 py-2 rounded-xl text-xs font-black border-2 border-primary/10 flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-primary" />
-                    TIME: <span className="text-primary">{problem.time_limit || '1.0s'}</span>
+                {(problem.time_limit || problem.memory_limit) && (
+                  <div className="flex flex-wrap gap-3">
+                    {problem.time_limit && (
+                      <div className="bg-primary/5 px-4 py-2 rounded-xl text-xs font-black border-2 border-primary/10 flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                        TIME: <span className="text-primary">{problem.time_limit}</span>
+                      </div>
+                    )}
+                    {problem.memory_limit && (
+                      <div className="bg-primary/5 px-4 py-2 rounded-xl text-xs font-black border-2 border-primary/10 flex items-center gap-2">
+                        <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                        MEM: <span className="text-primary">{problem.memory_limit}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-primary/5 px-4 py-2 rounded-xl text-xs font-black border-2 border-primary/10 flex items-center gap-2">
-                    <BarChart3 className="w-3.5 h-3.5 text-primary" />
-                    MEM: <span className="text-primary">{problem.memory_limit || '256MB'}</span>
-                  </div>
-                </div>
+                )}
                 
                 {problem.statement_html ? (
                   <ProblemStatement html={problem.statement_html} oj={problem.oj} />
