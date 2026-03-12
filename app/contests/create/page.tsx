@@ -328,7 +328,7 @@ export default function CreateContest() {
         <div className="space-y-8">
           <Card className="inara-block border-0 bg-transparent shadow-none sticky top-24">
             <CardHeader className="bg-inara-primary text-white border-2 border-inara-primary-dark rounded-t-xl py-4">
-              <CardTitle className="text-lg font-black uppercase tracking-tight italic">Arena Config</CardTitle>
+              <CardTitle className="text-lg font-black uppercase tracking-tight italic">Contest Config</CardTitle>
             </CardHeader>
             <CardContent className="bg-white border-2 border-t-0 border-inara-border rounded-b-xl space-y-8 p-8">
               <div className="space-y-4">
@@ -389,10 +389,10 @@ export default function CreateContest() {
                 disabled={isSubmitting}
                 onClick={handleSubmit}
               >
-                {isSubmitting ? <><Loader2 className="animate-spin mr-2" /> Launching...</> : 'LAUNCH ARENA'}
+                {isSubmitting ? <><Loader2 className="animate-spin mr-2" /> Launching...</> : 'LAUNCH CONTEST'}
               </Button>
               <p className="text-[10px] text-center text-inara-logic/40 font-bold italic px-4">
-                Verify all problems are "Resolved" before launching your arena.
+                Verify all problems are "Resolved" before launching your contest.
               </p>
             </CardFooter>
           </Card>

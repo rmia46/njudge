@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -88,7 +89,7 @@ export default function ContestView() {
               "inara-badge border-2",
               isUpcoming ? "text-amber-600 border-amber-200 bg-amber-50" : "text-emerald-600 border-emerald-200 bg-emerald-50"
             )}>
-              {isUpcoming ? 'Upcoming' : 'Ongoing Arena'}
+              {isUpcoming ? 'Upcoming' : 'Ongoing Contest'}
             </span>
             {contest.is_private ? (
               <span className="inara-badge border-2 text-rose-600 border-rose-200 bg-rose-50 flex items-center gap-1.5">
@@ -138,7 +139,7 @@ export default function ContestView() {
         </TabsList>
         
         <TabsContent value="problems" className="focus-visible:outline-none">
-          <div className="inara-block overflow-hidden bg-white">
+          <div className="inara-block overflow-hidden bg-white border-2 border-inara-border">
             <table className="w-full text-left border-collapse">
               <thead className="bg-inara-muted/20 border-b-2 border-inara-border">
                 <tr>
@@ -184,7 +185,7 @@ export default function ContestView() {
                   <tr>
                     <td colSpan={5} className="py-24 text-center">
                       <PlayCircle className="w-12 h-12 text-inara-logic/10 mx-auto mb-4" />
-                      <p className="text-inara-logic/40 font-bold italic text-sm">No problems linked to this arena yet.</p>
+                      <p className="text-inara-logic/40 font-bold italic text-sm">No problems linked to this contest yet.</p>
                     </td>
                   </tr>
                 )}
