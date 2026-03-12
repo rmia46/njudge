@@ -186,7 +186,7 @@ export default function CreateContest() {
     <main className="max-w-7xl mx-auto py-12 px-4 w-full">
       <div className="mb-10 space-y-2 border-b-4 border-inara-border pb-8">
         <h1 className="text-5xl font-black tracking-tight text-inara-logic uppercase leading-none">New Challenge</h1>
-        <p className="text-inara-logic/60 font-medium italic">Configure your arena rules and problem set.</p>
+        <p className="text-inara-logic/60 font-medium italic">Configure your contest rules and problem set.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-10">

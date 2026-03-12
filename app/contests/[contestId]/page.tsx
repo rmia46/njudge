@@ -7,7 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { supabase } from '@/lib/supabase'
-import { Loader2, ArrowRight, PlayCircle, Trophy, ListChecks, Users, Clock, MessageSquare, ChevronRight, Lock, Unlock } from 'lucide-react'
+import { Loader2, ArrowRight, PlayCircle, Trophy, ListChecks, Users, Clock, MessageSquare, ChevronRight, Lock, Unlock, Edit3, Trash2 } from 'lucide-react'
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { ContestStandings } from '@/components/contest-standings'
 import { ContestStatus } from '@/components/contest-status'
 import { ContestComments } from '@/components/contest-comments'
@@ -24,6 +35,7 @@ export default function ContestView() {
   const [isParticipant, setIsParticipant] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isJoining, setIsJoining] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
@@ -74,10 +86,22 @@ export default function ContestView() {
     setIsJoining(false)
   }
 
+  const deleteContest = async () => {
+    setIsDeleting(true)
+    const { error } = await supabase.from('contests').delete().eq('id', contestId)
+    if (error) {
+      alert(error.message)
+      setIsDeleting(false)
+    } else {
+      router.push('/contests')
+    }
+  }
+
   if (isLoading) return <div className="flex justify-center p-24 text-inara-primary"><Loader2 className="animate-spin" /></div>
   if (!contest) return <div className="text-center p-24">Contest not found.</div>
 
   const isUpcoming = new Date(contest.start_time) > new Date()
+  const isOwner = user?.id === contest.owner_id
 
   return (
     <main className="max-w-7xl mx-auto py-12 px-4 space-y-10 w-full">
@@ -100,6 +124,9 @@ export default function ContestView() {
                 <Unlock className="w-3 h-3" /> Public
               </span>
             )}
+            {isOwner && (
+              <span className="inara-badge border-2 text-inara-primary border-inara-primary/20 bg-inara-primary/5">Owner Mode</span>
+            )}
           </div>
           <h1 className="text-5xl font-black tracking-tight text-inara-logic uppercase leading-none">{contest.title}</h1>
           <p className="text-inara-logic/60 max-w-2xl font-medium leading-relaxed italic">{contest.description || 'Join this competitive programming challenge.'}</p>
@@ -113,19 +140,64 @@ export default function ContestView() {
             <div className="text-[10px] font-black uppercase text-inara-logic/40">Starts: {new Date(contest.start_time).toLocaleString()}</div>
           </div>
           
-          {!isParticipant ? (
-            <Button 
-              onClick={joinContest} 
-              disabled={isJoining}
-              className="inara-btn inara-btn-primary h-12 px-10 font-black w-full"
-            >
-              {isJoining ? <Loader2 className="animate-spin" /> : <><Users className="w-4 h-4 mr-2" /> JOIN CONTEST</>}
-            </Button>
-          ) : (
-            <div className="inara-block bg-inara-primary/5 border-inara-primary/30 px-6 py-2 rounded-xl text-inara-primary font-black text-xs flex items-center gap-2">
-              <ListChecks className="w-4 h-4" /> REGISTERED
-            </div>
-          )}
+          <div className="flex gap-3 w-full justify-end">
+            {isOwner && (
+              <>
+                <Button 
+                  onClick={() => router.push(`/contests/create?edit=${contestId}`)}
+                  variant="outline" 
+                  className="inara-btn bg-white border-inara-border h-12 px-6 font-black"
+                >
+                  <Edit3 className="w-4 h-4 mr-2" /> EDIT
+                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="inara-btn bg-white border-rose-200 text-rose-600 hover:bg-rose-50 h-12 px-4 font-black"
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="inara-block bg-white p-8">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-2xl font-black text-inara-logic uppercase">Delete Contest?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-inara-logic/60 font-medium">
+                        This will permanently remove the contest, all its problems, and all submissions. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-8 gap-4">
+                      <AlertDialogCancel className="inara-btn bg-white border-inara-border">Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={deleteContest}
+                        className="inara-btn bg-rose-600 border-rose-700 text-white hover:bg-rose-700"
+                      >
+                        Delete Permanently
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
+
+            {!isParticipant && !isOwner && (
+              <Button 
+                onClick={joinContest} 
+                disabled={isJoining}
+                className="inara-btn inara-btn-primary h-12 px-10 font-black w-full"
+              >
+                {isJoining ? <Loader2 className="animate-spin" /> : <><Users className="w-4 h-4 mr-2" /> JOIN CONTEST</>}
+              </Button>
+            )}
+            
+            {(isParticipant || isOwner) && !isOwner && (
+              <div className="inara-block bg-inara-primary/5 border-inara-primary/30 px-6 py-2 rounded-xl text-inara-primary font-black text-xs flex items-center justify-center gap-2 w-full">
+                <ListChecks className="w-4 h-4" /> REGISTERED
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

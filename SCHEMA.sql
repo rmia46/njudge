@@ -98,9 +98,17 @@ CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING 
 
 CREATE POLICY "Public read contests" ON contests FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can create contests" ON contests FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Owners can update their contests" ON contests FOR UPDATE USING (auth.uid() = owner_id);
+CREATE POLICY "Owners can delete their contests" ON contests FOR DELETE USING (auth.uid() = owner_id);
 
 CREATE POLICY "Public read problems" ON problems FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can create problems" ON problems FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Contest owners can update problems" ON problems FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM contests WHERE id = problems.contest_id AND owner_id = auth.uid())
+);
+CREATE POLICY "Contest owners can delete problems" ON problems FOR DELETE USING (
+  EXISTS (SELECT 1 FROM contests WHERE id = problems.contest_id AND owner_id = auth.uid())
+);
 
 CREATE POLICY "Public read participants" ON participants FOR SELECT USING (true);
 CREATE POLICY "Users can join contests" ON participants FOR INSERT WITH CHECK (auth.uid() = user_id);
