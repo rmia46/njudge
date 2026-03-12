@@ -20,13 +20,13 @@ export const INARA_PALETTE = {
     glow: "0.32 0.10 265 / 0.2",
   },
 
-  // Interface Surfaces (Light Aesthetic)
+  // Interface Surfaces (Softened Light Aesthetic)
   monolith: {
     bg: "0.98 0.01 108",      // #F8FAF0 (Very Light Sage/Cream)
-    card: "1 0 0",            // Pure White for cards
-    muted: "0.94 0.03 108",   // #EDF2DB (Subtle Surface)
-    border: "0.32 0.10 265",  // #263B6A (Navy Borders for crisp lines)
-    shadow: "0.32 0.10 265 / 0.15", // Soft Navy Shadow
+    card: "1 0 0",            // Pure White
+    muted: "0.97 0.01 108",   // Softened Grey (Very subtle)
+    border: "0.88 0.02 265",  // Lightened Grey-Navy Border
+    shadow: "0.32 0.10 265 / 0.08", // Very Soft Shadow
   },
 
   // State colors
