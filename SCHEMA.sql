@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS problems (
   title TEXT NOT NULL,
   point_value INTEGER DEFAULT 100,
   problem_url TEXT NOT NULL,
+  editorial_url TEXT,
   statement_html TEXT,
   time_limit TEXT,
   memory_limit TEXT,
