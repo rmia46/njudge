@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { ProblemStatement } from '@/components/problem-statement'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 const LANGUAGE_MAP: Record<string, string> = {
   '54': 'cpp',
@@ -137,6 +138,27 @@ export default function ProblemPage() {
   }
 
   const handleSubmit = async () => {
+    if (!code || code.trim().length < 10) {
+      toast.error("Source code is too short.")
+      return
+    }
+
+    // 1. Anti-Spam: Check if a submission is already pending
+    const hasPending = submissions.some(s => 
+      ['In Queue', 'Judging', 'Pending'].includes(s.verdict)
+    )
+    if (hasPending) {
+      toast.error("Please wait for your previous submission to finish judging.")
+      return
+    }
+
+    // 2. Anti-Spam: Check for duplicate code
+    const lastSubmission = submissions[0]
+    if (lastSubmission && lastSubmission.code === code) {
+      toast.error("You are trying to submit the exact same code as your previous attempt.")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
