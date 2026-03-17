@@ -19,7 +19,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'NJUDGE_SUBMIT') {
     handleSubmission(request.payload)
       .then(data => sendResponse({ status: 'success', data }))
-      .catch(error => sendResponse({ status: 'error', message: error.message }));
+      .catch(error => {
+        console.error('Submission Error:', error);
+        sendResponse({ 
+          status: 'error', 
+          message: error.message,
+          code: error.message.includes('Login to') ? 'NEED_LOGIN' : 'SUBMIT_ERROR'
+        });
+      });
     return true;
   }
 
@@ -40,7 +47,7 @@ async function handleCustomTest({ oj, code, languageId, input }) {
     const getResp = await fetch(customTestUrl);
     const getHtml = await getResp.text();
     const csrfToken = getHtml.match(/data-csrf='(.+?)'/)?.[1];
-    if (!csrfToken) throw new Error('Could not find CSRF token. Log into Codeforces.');
+    if (!csrfToken) throw new Error('Login to Codeforces');
 
     const formData = new FormData();
     formData.append('csrf_token', csrfToken);
@@ -105,11 +112,9 @@ async function handleScrapeProblem({ oj, id }) {
           }
           const html = await response.text();
           
-          // 1. Title
           const divMatch = html.match(/<div class="title">[\s\S]*?([A-Z]\d*[\.\s]+)?([^<]+)<\/div>/);
           const title = divMatch ? divMatch[2].trim() : '';
 
-          // 2. RAW Container extraction (VJudge style)
           const startIdx = html.indexOf('<div class="problem-statement">');
           const endIdx = html.indexOf('<script', startIdx);
           let statementHtml = '';
@@ -117,7 +122,6 @@ async function handleScrapeProblem({ oj, id }) {
             statementHtml = html.substring(startIdx, endIdx);
           }
 
-          // Metadata extraction
           const tMatch = html.match(/<div class="time-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
           const mMatch = html.match(/<div class="memory-limit">[\s\S]*?<div class="property-title">[\s\S]*?<\/div>(.+?)<\/div>/);
 
@@ -141,7 +145,6 @@ async function handleScrapeProblem({ oj, id }) {
       const titleTagMatch = html.match(/<title>([\s\S]*?)<\/title>/);
       const title = titleTagMatch?.[1].split(' - ')[1]?.trim() || 'Unknown';
 
-      // Capture the whole task-statement section
       const startIdx = html.indexOf('<div id="task-statement">');
       const endIdx = html.indexOf('</div>', html.indexOf('<div class="button-pannel">'));
       let statementHtml = '';
@@ -166,7 +169,11 @@ async function handleSubmission({ oj, problemId, code, languageId, submissionId,
     const getResp = await fetch(submitUrl);
     const getHtml = await getResp.text();
     const csrfToken = getHtml.match(/data-csrf='(.+?)'/)?.[1];
-    if (!csrfToken) throw new Error('Login to Codeforces');
+    
+    // Check if we are redirected to login or token is missing
+    if (!csrfToken || getHtml.includes('handleOrEmail')) {
+      throw new Error('Login to Codeforces first in another tab.');
+    }
 
     const formData = new FormData();
     formData.append('csrf_token', csrfToken);
@@ -177,7 +184,11 @@ async function handleSubmission({ oj, problemId, code, languageId, submissionId,
     formData.append('_tta', '37');
 
     const postResp = await fetch(submitUrl + '?enforceRedirect=true', { method: 'POST', body: formData, redirect: 'follow' });
-    if (!postResp.ok) throw new Error('CF Submission failed');
+    if (!postResp.ok) throw new Error('CF Submission failed. Check if you are logged in.');
+    
+    const finalHtml = await postResp.text();
+    if (finalHtml.includes('handleOrEmail')) throw new Error('Login to Codeforces session expired.');
+
     pollCFVerdict(contestId, submissionId, supabaseConfig);
     return { status: 'submitted' };
   }
@@ -189,7 +200,10 @@ async function handleSubmission({ oj, problemId, code, languageId, submissionId,
     const getResp = await fetch(submitUrl);
     const getHtml = await getResp.text();
     const csrfToken = getHtml.match(/name="csrf_token" value="(.+?)"/)?.[1];
-    if (!csrfToken) throw new Error('Login to AtCoder');
+    
+    if (!csrfToken || getHtml.includes('login?')) {
+      throw new Error('Login to AtCoder first in another tab.');
+    }
 
     const formData = new FormData();
     formData.append('data.TaskScreenName', problemId);
@@ -198,7 +212,11 @@ async function handleSubmission({ oj, problemId, code, languageId, submissionId,
     formData.append('csrf_token', csrfToken);
 
     const postResp = await fetch(submitUrl, { method: 'POST', body: formData, redirect: 'follow' });
-    if (!postResp.ok) throw new Error('AC Submission failed');
+    if (!postResp.ok) throw new Error('AC Submission failed. Check login.');
+    
+    const finalHtml = await postResp.text();
+    if (finalHtml.includes('login?')) throw new Error('AtCoder session expired.');
+
     pollACVerdict(contestId, submissionId, supabaseConfig);
     return { status: 'submitted' };
   }

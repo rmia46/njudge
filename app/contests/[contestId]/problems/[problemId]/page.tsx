@@ -51,6 +51,7 @@ export default function ProblemPage() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== window) return
+      
       if (event.data && event.data.type === 'NJUDGE_CUSTOM_TEST_RESPONSE') {
         const { status, data, message } = event.data.payload
         if (status === 'success') {
@@ -59,6 +60,21 @@ export default function ProblemPage() {
           alert(`Test failed: ${message}`)
         }
         setIsTesting(false)
+      }
+
+      if (event.data && event.data.type === 'NJUDGE_SUBMIT_RESPONSE') {
+        const { status, message, code } = event.data.payload
+        if (status === 'error') {
+          if (code === 'NEED_LOGIN') {
+            alert(`ACTION REQUIRED: ${message}\n\nPlease open Codeforces/AtCoder in a new tab, login, and return here to submit.`)
+          } else {
+            alert(`Submission Error: ${message}`)
+          }
+          setIsSubmitting(false)
+        } else {
+          // Success is handled by the supabase channel subscription
+          setIsSubmitting(false)
+        }
       }
     }
     window.addEventListener('message', handleMessage)
