@@ -51,7 +51,7 @@ export function Navbar() {
       {/* 1. Backdrop Overlay (Close menu when clicking outside) */}
       {activeMenu && (
         <div 
-          className="fixed inset-0 bg-inara-logic/10 backdrop-blur-[2px] z-30"
+          className="fixed inset-0 bg-transparent z-30"
           onClick={() => setActiveMenu(null)}
         />
       )}
