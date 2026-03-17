@@ -15,7 +15,6 @@ import {
   Home, 
   LayoutGrid, 
   Zap, 
-  Palette,
   ChevronUp,
   Settings,
   History
@@ -37,7 +36,6 @@ export function Navbar() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Close menu on path change
   useEffect(() => {
     setActiveMenu(null)
   }, [pathname])
@@ -48,7 +46,6 @@ export function Navbar() {
 
   return (
     <>
-      {/* 1. Backdrop Overlay (Close menu when clicking outside) */}
       {activeMenu && (
         <div 
           className="fixed inset-0 bg-transparent z-30"
@@ -56,7 +53,7 @@ export function Navbar() {
         />
       )}
 
-      {/* 2. Slide-up Sub-menus */}
+      {/* Slide-up Sub-menus */}
       <div className={cn(
         "inara-submenu px-4 py-4 space-y-3",
         activeMenu === 'contests' ? "flex flex-col" : "hidden"
@@ -103,7 +100,7 @@ export function Navbar() {
               <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center border-2 border-rose-200">
                 <LogOut className="w-4 h-4" />
               </div>
-              <span className="font-bold text-sm uppercase tracking-tighter">Sign Out</span>
+              <span className="font-bold text-sm uppercase tracking-tighter text-white">Sign Out</span>
             </button>
           </>
         ) : (
@@ -114,61 +111,61 @@ export function Navbar() {
         )}
       </div>
 
-      {/* 3. The Main Dock */}
+      {/* The Main Dock */}
       <div className="inara-dock">
         <Link 
           href="/" 
-          className={cn("inara-dock-item", pathname === '/' && "active")}
-          title="Home"
+          className={cn(
+            "inara-dock-item flex-col md:flex-row", 
+            pathname === '/' && "active text-inara-primary"
+          )}
         >
-          <Home className="w-5 h-5" />
-          <span className="text-[8px] font-black uppercase mt-1">Base</span>
+          <Home className="w-6 h-6" />
+          <span className="font-pixel text-xs md:text-sm uppercase leading-none">Home</span>
         </Link>
-
-        <div className="w-[2px] h-8 bg-inara-border/20 mx-1" />
 
         <button 
           onClick={() => toggleMenu('contests')}
           className={cn(
-            "inara-dock-item", 
+            "inara-dock-item flex-col md:flex-row", 
             (pathname.startsWith('/contests') || activeMenu === 'contests') && "text-inara-primary"
           )}
         >
-          <Trophy className={cn("w-5 h-5", activeMenu === 'contests' && "animate-bounce")} />
-          <span className="text-[8px] font-black uppercase mt-1">Arena</span>
+          <Trophy className={cn("w-6 h-6", activeMenu === 'contests' && "animate-bounce")} />
+          <span className="font-pixel text-xs md:text-sm uppercase leading-none">Arena</span>
         </button>
 
         <Link 
           href="/extension" 
-          className={cn("inara-dock-item", pathname === '/extension' && "text-inara-primary")}
+          className={cn(
+            "inara-dock-item flex-col md:flex-row", 
+            pathname === '/extension' && "text-inara-primary"
+          )}
         >
           <div className="relative">
-            <Zap className="w-5 h-5" />
+            <Zap className="w-6 h-6" />
             <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-slate-300 border border-white" id="extension-status-dot" />
           </div>
-          <span className="text-[8px] font-black uppercase mt-1">Bridge</span>
+          <span className="font-pixel text-xs md:text-sm uppercase leading-none">Bridge</span>
         </Link>
-
-        <div className="w-[2px] h-8 bg-inara-border/20 mx-1" />
 
         <button 
           onClick={() => toggleMenu('profile')}
           className={cn(
-            "inara-dock-item",
+            "inara-dock-item flex-col md:flex-row",
             (pathname === '/profile' || activeMenu === 'profile') && "text-inara-primary"
           )}
         >
           {user ? (
             <div className="w-6 h-6 rounded bg-inara-primary flex items-center justify-center border-2 border-inara-primary-dark overflow-hidden">
-              <UserIcon className="w-3.5 h-3.5 text-white" />
+              <UserIcon className="w-4 h-4 text-white" />
             </div>
           ) : (
-            <LogIn className="w-5 h-5" />
+            <LogIn className="w-6 h-6" />
           )}
-          <span className="text-[8px] font-black uppercase mt-1">Account</span>
+          <span className="font-pixel text-xs md:text-sm uppercase leading-none">Account</span>
         </button>
 
-        {/* Extension Detection Logic */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             const check = () => {
