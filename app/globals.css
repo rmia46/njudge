@@ -81,7 +81,7 @@
 }
 
 @layer components {
-  /* INARA BOTTOM BAR - COMPACT */
+  /* INARA BOTTOM BAR - FULL WIDTH & INVERTED */
   .inara-dock {
     position: fixed !important;
     bottom: 0 !important;
@@ -92,37 +92,37 @@
     justify-content: center !important;
     align-items: center !important;
     gap: 1rem !important;
-    padding: 0.5rem 1rem !important; /* Smaller height */
-    background-color: white !important;
-    border-top: 3px solid oklch(var(--inara-border)) !important;
-    box-shadow: 0px -4px 12px rgba(0,0,0,0.03) !important;
+    padding: 0.5rem 1rem !important;
+    background-color: oklch(var(--inara-primary)) !important;
+    border-top: 3px solid oklch(var(--inara-primary-dark)) !important;
+    box-shadow: 0px -4px 20px rgba(0,0,0,0.1) !important;
   }
 
   .inara-dock-item {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 0.5rem 1rem !important;
+    padding: 0.5rem 1.25rem !important;
     border-radius: 0.5rem !important;
     transition: all 0.2s ease !important;
-    color: oklch(var(--inara-logic) / 0.6) !important;
+    color: oklch(var(--inara-logic) / 0.8) !important; /* Navy Contrast */
     text-decoration: none !important;
     border: none !important;
     background: transparent !important;
     cursor: pointer !important;
-    gap: 0.5rem !important; /* Space between icon and text on desktop */
+    gap: 0.5rem !important;
   }
 
-  /* Force stacked on mobile via media query if needed, but we will handle via Tailwind classes in JS too */
-
   .inara-dock-item:hover {
-    color: oklch(var(--inara-primary)) !important;
-    background-color: oklch(var(--inara-primary) / 0.05) !important;
+    color: oklch(var(--inara-logic)) !important;
+    background-color: oklch(var(--inara-primary-dark) / 0.2) !important;
+    transform: translateY(-2px) !important;
   }
 
   .inara-dock-item.active {
-    color: oklch(var(--inara-primary)) !important;
-    background-color: oklch(var(--inara-primary) / 0.1) !important;
+    color: oklch(var(--inara-logic)) !important;
+    background-color: oklch(var(--inara-primary-dark) / 0.3) !important;
+    font-weight: 900 !important;
   }
 
   /* SUBMENU SLIDE UP */
@@ -144,12 +144,6 @@
   .inara-block {
     @apply bg-inara-card border-[3px] border-inara-border rounded-md transition-all duration-300;
     box-shadow: 4px 4px 0px 0px oklch(var(--inara-shadow));
-  }
-
-  .inara-block:hover {
-    @apply border-inara-primary;
-    transform: translate(-1px, -1px);
-    box-shadow: 6px 6px 0px 0px oklch(var(--inara-shadow));
   }
 
   .inara-btn {

@@ -254,9 +254,9 @@ export default function ContestView() {
                 </thead>
                 <tbody className="divide-y-2 divide-inara-border/5">
                   {problems.map((prob, index) => (
-                    <tr key={prob.id} className="hover:bg-inara-primary/5 transition-colors group">
+                    <tr key={prob.id} className="transition-colors group text-inara-logic">
                       <td className="p-4 pl-8">
-                        <div className="w-8 h-8 rounded bg-inara-logic/5 border-2 border-inara-border/20 flex items-center justify-center font-mono font-black text-inara-primary text-sm group-hover:bg-inara-primary group-hover:text-white transition-colors">
+                        <div className="w-8 h-8 rounded bg-inara-logic/5 border-2 border-inara-border/20 flex items-center justify-center font-mono font-black text-inara-primary text-sm transition-colors">
                           {String.fromCharCode(65 + index)}
                         </div>
                       </td>
@@ -275,15 +275,14 @@ export default function ContestView() {
                       <td className="p-4 text-right pr-8">
                         <Button 
                           onClick={() => router.push(`/contests/${contestId}/problems/${prob.id}`)}
-                          className="h-9 px-4 text-xs font-bold bg-white border-2 border-inara-border hover:bg-inara-primary hover:text-white hover:border-inara-primary-dark transition-all"
+                          className="h-9 px-4 text-xs font-bold bg-white border-2 border-inara-border hover:bg-inara-muted text-inara-logic transition-all"
                           disabled={!isParticipant && isUpcoming && !isOwner}
                         >
                           Enter <ArrowRight className="w-3 h-3 ml-2" />
                         </Button>
                       </td>
                     </tr>
-                  ))}
-                  {problems.length === 0 && (
+                  ))}                  {problems.length === 0 && (
                     <tr>
                       <td colSpan={5} className="py-24 text-center">
                         <PlayCircle className="w-12 h-12 text-inara-logic/10 mx-auto mb-4" />

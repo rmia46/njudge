@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,7 @@ export function Navbar() {
   const [user, setUser] = useState<User | null>(null)
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const pathname = usePathname()
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,45 +41,53 @@ export function Navbar() {
     setActiveMenu(null)
   }, [pathname])
 
-  const toggleMenu = (menu: string) => {
-    setActiveMenu(activeMenu === menu ? null : menu)
+  const handleMouseEnter = (menu: string) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setActiveMenu(menu)
+  }
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setActiveMenu(null)
+    }, 150) // Small delay to allow moving mouse to the submenu
   }
 
   return (
     <>
-      {activeMenu && (
-        <div 
-          className="fixed inset-0 bg-transparent z-30"
-          onClick={() => setActiveMenu(null)}
-        />
-      )}
-
-      {/* Slide-up Sub-menus */}
-      <div className={cn(
-        "inara-submenu px-4 py-4 space-y-3",
-        activeMenu === 'contests' ? "flex flex-col" : "hidden"
-      )}>
+      {/* 1. Slide-up Sub-menus */}
+      <div 
+        className={cn(
+          "inara-submenu px-4 py-4 space-y-3",
+          activeMenu === 'contests' ? "flex flex-col" : "hidden"
+        )}
+        onMouseEnter={() => handleMouseEnter('contests')}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="text-[10px] font-black uppercase text-inara-logic/40 px-2 border-b border-inara-border/10 pb-2 mb-1">
           Contest Operations
         </div>
         <Link href="/contests" className="flex items-center gap-3 p-3 rounded-xl hover:bg-inara-primary/10 text-inara-logic transition-all group">
-          <div className="w-8 h-8 rounded-lg bg-inara-muted flex items-center justify-center border-2 border-inara-border group-hover:border-inara-primary">
+          <div className="w-8 h-8 rounded-lg bg-inara-muted flex items-center justify-center border-2 border-inara-border group-hover:border-inara-primary text-inara-logic">
             <LayoutGrid className="w-4 h-4" />
           </div>
           <span className="font-bold text-sm">Contest Gallery</span>
         </Link>
         <Link href="/contests/create" className="flex items-center gap-3 p-3 rounded-xl hover:bg-inara-primary/10 text-inara-logic transition-all group">
-          <div className="w-8 h-8 rounded-lg bg-inara-muted flex items-center justify-center border-2 border-inara-border group-hover:border-inara-primary">
+          <div className="w-8 h-8 rounded-lg bg-inara-muted flex items-center justify-center border-2 border-inara-border group-hover:border-inara-primary text-inara-logic">
             <PlusCircle className="w-4 h-4" />
           </div>
           <span className="font-bold text-sm">New Challenge</span>
         </Link>
       </div>
 
-      <div className={cn(
-        "inara-submenu px-4 py-4 space-y-3",
-        activeMenu === 'profile' ? "flex flex-col" : "hidden"
-      )}>
+      <div 
+        className={cn(
+          "inara-submenu px-4 py-4 space-y-3",
+          activeMenu === 'profile' ? "flex flex-col" : "hidden"
+        )}
+        onMouseEnter={() => handleMouseEnter('profile')}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="text-[10px] font-black uppercase text-inara-logic/40 px-2 border-b border-inara-border/10 pb-2 mb-1">
           User Identity
         </div>
@@ -88,7 +97,7 @@ export function Navbar() {
               <div className="w-8 h-8 rounded-lg bg-inara-primary flex items-center justify-center border-2 border-inara-primary-dark">
                 <UserIcon className="w-4 h-4 text-white" />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col text-inara-logic">
                 <span className="font-bold text-sm leading-none">{user.email?.split('@')[0]}</span>
                 <span className="text-[10px] opacity-40 mt-1 uppercase font-mono">Profile Config</span>
               </div>
@@ -100,7 +109,7 @@ export function Navbar() {
               <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center border-2 border-rose-200">
                 <LogOut className="w-4 h-4" />
               </div>
-              <span className="font-bold text-sm uppercase tracking-tighter text-white">Sign Out</span>
+              <span className="font-bold text-sm uppercase tracking-tighter">Sign Out</span>
             </button>
           </>
         ) : (
@@ -111,60 +120,61 @@ export function Navbar() {
         )}
       </div>
 
-      {/* The Main Dock */}
-      <div className="inara-dock">
+      {/* 2. The Main Dock */}
+      <div className="inara-dock" onMouseLeave={handleMouseLeave}>
         <Link 
           href="/" 
           className={cn(
             "inara-dock-item flex-col md:flex-row", 
-            pathname === '/' && "active text-inara-primary"
+            pathname === '/' && "active"
           )}
+          title="Home"
         >
           <Home className="w-6 h-6" />
           <span className="font-pixel text-xs md:text-sm uppercase leading-none">Home</span>
         </Link>
 
-        <button 
-          onClick={() => toggleMenu('contests')}
+        <div 
           className={cn(
-            "inara-dock-item flex-col md:flex-row", 
-            (pathname.startsWith('/contests') || activeMenu === 'contests') && "text-inara-primary"
+            "inara-dock-item flex-col md:flex-row cursor-pointer", 
+            (pathname.startsWith('/contests') || activeMenu === 'contests') && "active"
           )}
+          onMouseEnter={() => handleMouseEnter('contests')}
         >
-          <Trophy className={cn("w-6 h-6", activeMenu === 'contests' && "animate-bounce")} />
+          <Trophy className="w-6 h-6" />
           <span className="font-pixel text-xs md:text-sm uppercase leading-none">Arena</span>
-        </button>
+        </div>
 
         <Link 
           href="/extension" 
           className={cn(
             "inara-dock-item flex-col md:flex-row", 
-            pathname === '/extension' && "text-inara-primary"
+            pathname === '/extension' && "active"
           )}
         >
           <div className="relative">
             <Zap className="w-6 h-6" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-slate-300 border border-white" id="extension-status-dot" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-inara-muted border border-inara-logic/20" id="extension-status-dot" />
           </div>
           <span className="font-pixel text-xs md:text-sm uppercase leading-none">Bridge</span>
         </Link>
 
-        <button 
-          onClick={() => toggleMenu('profile')}
+        <div 
           className={cn(
-            "inara-dock-item flex-col md:flex-row",
-            (pathname === '/profile' || activeMenu === 'profile') && "text-inara-primary"
+            "inara-dock-item flex-col md:flex-row cursor-pointer",
+            (pathname === '/profile' || activeMenu === 'profile') && "active"
           )}
+          onMouseEnter={() => handleMouseEnter('profile')}
         >
           {user ? (
-            <div className="w-6 h-6 rounded bg-inara-primary flex items-center justify-center border-2 border-inara-primary-dark overflow-hidden">
-              <UserIcon className="w-4 h-4 text-white" />
+            <div className="w-6 h-6 rounded bg-inara-logic/20 flex items-center justify-center border-2 border-inara-logic/40 overflow-hidden">
+              <UserIcon className="w-4 h-4 text-inara-logic" />
             </div>
           ) : (
             <LogIn className="w-6 h-6" />
           )}
           <span className="font-pixel text-xs md:text-sm uppercase leading-none">Account</span>
-        </button>
+        </div>
 
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {

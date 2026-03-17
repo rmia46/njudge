@@ -137,7 +137,7 @@ function ContestRow({ contest }: { contest: any }) {
   const participantCount = contest.participants?.[0]?.count || 0
 
   return (
-    <tr className="hover:bg-inara-primary/5 transition-colors group">
+    <tr className="transition-colors group">
       <td className="p-4 pl-8">
         <span className={cn("inara-badge border-2", config.class)}>{config.label}</span>
       </td>
@@ -166,7 +166,7 @@ function ContestRow({ contest }: { contest: any }) {
         </div>
       </td>
       <td className="p-4 text-right pr-8">
-        <Button asChild variant="ghost" className="h-9 w-9 p-0 group-hover:bg-inara-primary group-hover:text-white transition-all border-2 border-transparent group-hover:border-inara-primary-dark">
+        <Button asChild variant="ghost" className="h-9 w-9 p-0 transition-all border-2 border-transparent">
           <Link href={`/contests/${contest.id}`}>
             <ChevronRight className="w-5 h-5" />
           </Link>
