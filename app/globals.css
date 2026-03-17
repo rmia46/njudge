@@ -24,7 +24,7 @@
 
   /* Shadcn Overrides - Light Mode Tuning */
   --color-background: oklch(var(--inara-bg));
-  --color-foreground: oklch(var(--inara-logic)); /* Navy text */
+  --color-foreground: oklch(var(--inara-logic)); 
   --color-primary: oklch(var(--inara-primary));
   --color-primary-foreground: white;
   --color-card: oklch(var(--inara-card));
@@ -48,7 +48,6 @@
 }
 
 :root {
-  /* Dynamic values mapped from INARA_PALETTE v0.3 */
   --inara-primary: 0.82 0.15 142;
   --inara-primary-light: 0.96 0.12 108;
   --inara-primary-dark: 0.45 0.10 142;
@@ -56,9 +55,9 @@
   --inara-logic: 0.32 0.10 265;
   --inara-bg: 0.98 0.01 108;
   --inara-card: 1 0 0;
-  --inara-muted: 0.94 0.03 108;
-  --inara-border: 0.32 0.10 265;
-  --inara-shadow: 0.32 0.10 265 / 0.15;
+  --inara-muted: 0.97 0.01 108;
+  --inara-border: 0.88 0.02 265;
+  --inara-shadow: 0.32 0.10 265 / 0.08;
 
   --inara-ac: 0.75 0.15 142;
   --inara-wa: 0.65 0.18 25;
@@ -82,6 +81,69 @@
 }
 
 @layer components {
+  /* INARA DOCK - FIXED & CENTERED */
+  .inara-dock {
+    position: fixed !important;
+    bottom: 1.5rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 100 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem !important;
+    background-color: white !important;
+    border: 3px solid oklch(var(--inara-border)) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0px 6px 0px 0px oklch(var(--inara-shadow)) !important;
+    min-width: fit-content !important;
+  }
+
+  .inara-dock-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    border-radius: 0.75rem !important;
+    transition: all 0.3s ease !important;
+    color: oklch(var(--inara-logic) / 0.6) !important;
+    text-decoration: none !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer !important;
+  }
+
+  .inara-dock-item:hover {
+    background-color: oklch(var(--inara-primary) / 0.1) !important;
+    transform: translateY(-4px) !important;
+    color: oklch(var(--inara-primary)) !important;
+  }
+
+  .inara-dock-item.active {
+    background-color: oklch(var(--inara-primary)) !important;
+    color: white !important;
+    border: 2px solid oklch(var(--inara-primary-dark)) !important;
+    box-shadow: inset 0px 2px 4px rgba(0,0,0,0.2) !important;
+  }
+
+  /* SUBMENU SLIDE UP */
+  .inara-submenu {
+    position: fixed !important;
+    bottom: 6rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 90 !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 20rem !important;
+    padding: 0.5rem !important;
+    background-color: white !important;
+    border: 3px solid oklch(var(--inara-border)) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0px 8px 32px rgba(0,0,0,0.1) !important;
+  }
+
   .inara-block {
     @apply bg-inara-card border-[3px] border-inara-border rounded-md transition-all duration-300;
     box-shadow: 4px 4px 0px 0px oklch(var(--inara-shadow));
@@ -103,12 +165,10 @@
     @apply bg-inara-primary text-white border-inara-primary-dark hover:bg-inara-primary-dark;
   }
 
-  /* Nerdy Data Display - Optimized for JetBrains Mono */
   .inara-data {
     @apply font-mono font-bold text-sm tracking-tight text-inara-logic leading-none;
   }
 
-  /* Pixel Badges - Optimized for VT323 */
   .inara-badge {
     @apply px-2 py-0.5 border-2 border-current rounded-sm font-[family-name:var(--font-vt323)] text-lg font-normal leading-none;
   }

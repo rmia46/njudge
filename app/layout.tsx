@@ -35,7 +35,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" style={inaraVars as React.CSSProperties}>
-      <body className={`${inter.variable} ${jetbrains.variable} ${vt323.variable} antialiased min-h-screen bg-inara-bg transition-colors duration-500`}>
+      <body className={`${inter.variable} ${jetbrains.variable} ${vt323.variable} antialiased min-h-screen bg-inara-bg transition-colors duration-500 pb-24`}>
         <Navbar />
         {children}
         <Toaster richColors position="top-right" />
