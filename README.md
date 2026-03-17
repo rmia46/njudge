@@ -1,6 +1,13 @@
-# nJudge
+# nJudge 🌿
 
-nJudge is a modern, distributed alternative to VJudge, designed for **Codeforces** and **AtCoder**. It bypasses server-side bot detection by using a client-side browser extension bridge.
+nJudge is a modern, distributed alternative to VJudge, designed for **Codeforces** and **AtCoder**. It features a unique **Inara Bit-Art** design system and bypasses server-side bot detection by using a client-side browser extension bridge.
+
+## ✨ The Inara Experience
+
+nJudge isn't just a judge; it's a "Nature-Tech" environment. 
+- **Command Dock:** A responsive, full-width bottom navigation bar with hover-based sub-menus.
+- **Bit-Art Aesthetic:** High-contrast Navy on Primary Green, with sharp 3px borders and solid shadows.
+- **Pixel Typography:** Utilizing VT323 for a nerdy, game-like interface.
 
 ## 🚀 Getting Started (Local Development)
 
@@ -38,22 +45,24 @@ To develop the extension with auto-reloading:
 ```bash
 npm run dev:extension:firefox
 ```
-This will launch a dedicated Firefox instance with the **nJudge Bridge** pre-loaded. Any changes made to the `extension/` folder will automatically trigger a reload.
+This will launch a dedicated Firefox instance with the **nJudge Bridge** pre-loaded.
 
 ## 🛠 Project Structure
 
-- `app/`: Next.js frontend and API routes.
-- `components/`: Modular UI components (shadcn based).
-- `extension/`: Browser extension source code (Background and Content scripts).
-- `supabase/`: Database migrations and configuration.
-- `lib/`: Shared utilities, theme engine, and ranking logic.
+- `app/`: Next.js frontend, including the dynamic `Contest` and `Problem` systems.
+- `components/`: Modular Inara-styled UI components.
+- `extension/`: Browser extension bridge (Manifest V3).
+- `supabase/`: Database schema, RLS policies, and migrations.
+- `lib/`: Shared utilities, `inara-colors` system, and ranking logic.
 
 ## 🌈 Key Features
 
-- **Distributed Bridge:** Submissions happen from the user's browser, ensuring zero IP blocks.
+- **Distributed Bridge:** Submissions happen directly from your browser—no IP blocks, no limits.
+- **Practice Mode:** Create immediate, infinite challenges with auto-revealed editorials.
+- **Admin HUD:** Contest owners can toggle a special "HUD" to see original links without spoilers.
+- **Anti-Spam Guards:** Built-in checks for duplicate code and pending submission blocks.
+- **Private Contests:** Secure challenges locked behind password access codes.
 - **Real-time Standings:** Live leaderboards powered by Supabase Realtime.
-- **Smart Scraper:** Automatic problem metadata and statement fetching.
-- **Unified Themes:** Custom Emerald and Midnight themes with OKLCH color support.
 
 ## 📜 License
 MIT
