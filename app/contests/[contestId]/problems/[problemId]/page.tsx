@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -30,10 +30,13 @@ const LANGUAGE_MAP: Record<string, string> = {
 
 export default function ProblemPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const contestId = params.contestId as string
   const problemId = params.problemId as string
+  const isAdminHUD = searchParams.get('admin') === 'true'
 
   const [problem, setProblem] = useState<any>(null)
+  const [contest, setContest] = useState<any>(null)
   const [code, setCode] = useState('')
   const [language, setLanguage] = useState('54')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,7 +61,7 @@ export default function ProblemPage() {
         if (status === 'success') {
           setCustomResult(data)
         } else {
-          alert(`Test failed: ${message}`)
+          toast.error(`Test failed: ${message}`)
         }
         setIsTesting(false)
       }
@@ -67,13 +70,14 @@ export default function ProblemPage() {
         const { status, message, code } = event.data.payload
         if (status === 'error') {
           if (code === 'NEED_LOGIN') {
-            alert(`ACTION REQUIRED: ${message}\n\nPlease open Codeforces/AtCoder in a new tab, login, and return here to submit.`)
+            toast.error(`ACTION REQUIRED: ${message}`, {
+              description: "Login to Codeforces/AtCoder in a new tab, then try again."
+            })
           } else {
-            alert(`Submission Error: ${message}`)
+            toast.error(`Submission Error: ${message}`)
           }
           setIsSubmitting(false)
         } else {
-          // Success is handled by the supabase channel subscription
           setIsSubmitting(false)
         }
       }
@@ -93,6 +97,9 @@ export default function ProblemPage() {
     async function fetchData() {
       const { data: prob } = await supabase.from('problems').select('*').eq('id', problemId).single()
       setProblem(prob)
+
+      const { data: contestData } = await supabase.from('contests').select('*').eq('id', contestId).single()
+      setContest(contestData)
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -126,7 +133,7 @@ export default function ProblemPage() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [problemId])
+  }, [problemId, contestId])
 
   const handleCustomTest = async () => {
     setIsTesting(true)
@@ -143,7 +150,6 @@ export default function ProblemPage() {
       return
     }
 
-    // 1. Anti-Spam: Check if a submission is already pending
     const hasPending = submissions.some(s => 
       ['In Queue', 'Judging', 'Pending'].includes(s.verdict)
     )
@@ -152,7 +158,6 @@ export default function ProblemPage() {
       return
     }
 
-    // 2. Anti-Spam: Check for duplicate code
     const lastSubmission = submissions[0]
     if (lastSubmission && lastSubmission.code === code) {
       toast.error("You are trying to submit the exact same code as your previous attempt.")
@@ -186,31 +191,54 @@ export default function ProblemPage() {
         }
       }, '*')
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (!problem) return <div className="flex justify-center p-24 text-inara-primary"><Loader2 className="animate-spin" /></div>
+  if (!problem || !contest) return <div className="flex justify-center p-24 text-inara-primary"><Loader2 className="animate-spin" /></div>
+
+  const isPast = new Date(new Date(contest.start_time).getTime() + contest.duration_minutes * 60000) < new Date()
+  const showSpoilers = contest.is_practice || isPast || isAdminHUD
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
+    <div className="max-w-7xl mx-auto py-8 px-4 space-y-8 text-inara-logic">
       {/* 1. Static Problem Header */}
       <header className="space-y-4">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <Badge className="inara-badge border-inara-primary text-inara-primary">{problem.oj}</Badge>
-              <span className="font-mono text-inara-logic opacity-40 font-bold tracking-tighter">{problem.external_id}</span>
+              <span className="font-mono opacity-40 font-bold tracking-tighter">{problem.external_id}</span>
+              {contest.is_practice && (
+                <Badge variant="outline" className="border-indigo-200 text-indigo-600 bg-indigo-50 font-black text-[10px] uppercase">Practice</Badge>
+              )}
+              {isAdminHUD && (
+                <Badge variant="outline" className="border-rose-200 text-rose-600 bg-rose-50 font-black text-[10px] uppercase">Admin HUD Active</Badge>
+              )}
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-inara-logic">{problem.title}</h1>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight">{problem.title}</h1>
           </div>
-          <Button variant="outline" className="inara-btn bg-white border-inara-border h-10 px-4 text-xs" asChild>
-            <a href={problem.problem_url} target="_blank" rel="noopener noreferrer">
-              Original <ExternalLink className="w-3.5 h-3.5 ml-2" />
-            </a>
-          </Button>
+          
+          <div className="flex gap-3">
+            {showSpoilers && (
+              <>
+                {problem.editorial_url && (
+                  <Button variant="outline" className="inara-btn bg-white border-emerald-200 text-emerald-600 hover:bg-emerald-50 h-10 px-4 text-xs font-black" asChild>
+                    <a href={problem.editorial_url} target="_blank" rel="noopener noreferrer">
+                      EDITORIAL <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                    </a>
+                  </Button>
+                )}
+                <Button variant="outline" className="inara-btn bg-white border-inara-border h-10 px-4 text-xs font-black" asChild>
+                  <a href={problem.problem_url} target="_blank" rel="noopener noreferrer">
+                    SOURCE <ExternalLink className="w-3.5 h-3.5 ml-2" />
+                  </a>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -351,7 +379,7 @@ export default function ProblemPage() {
               </thead>
               <tbody className="divide-y divide-inara-border/10">
                 {submissions.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-inara-primary/5 transition-colors group">
+                  <tr key={sub.id} className="transition-colors group">
                     <td className="p-4 font-mono text-xs text-inara-logic/60">{new Date(sub.submitted_at).toLocaleString()}</td>
                     <td className="p-4">
                       <Badge variant="outline" className="border-inara-border/20 text-[10px] font-bold uppercase">{sub.language}</Badge>

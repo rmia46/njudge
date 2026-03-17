@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
-import { Loader2, ArrowRight, PlayCircle, Trophy, ListChecks, Users, Clock, MessageSquare, ChevronRight, Lock, Unlock, Edit3, Trash2 } from 'lucide-react'
+import { Loader2, ArrowRight, PlayCircle, Trophy, ListChecks, Users, Clock, MessageSquare, ChevronRight, Lock, Unlock, Edit3, Trash2, Eye, EyeOff } from 'lucide-react'
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +41,7 @@ export default function ContestView() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [accessCode, setAccessCode] = useState('')
+  const [adminMode, setAdminMode] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -118,20 +119,27 @@ export default function ContestView() {
 
   const isUpcoming = new Date(contest.start_time) > new Date()
   const isOwner = user?.id === contest.owner_id
-  const canViewContent = !contest.is_private || isParticipant || isOwner
+  const canViewContent = !contest.is_private || isParticipant || isOwner || contest.is_practice
 
   return (
-    <main className="max-w-7xl mx-auto py-12 px-4 space-y-10 w-full">
+    <main className="max-w-7xl mx-auto py-12 px-4 space-y-10 w-full text-inara-logic">
       {/* 1. Contest Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-10 border-b-4 border-inara-border">
         <div className="space-y-4 flex-1">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className={cn(
-              "inara-badge border-2",
-              isUpcoming ? "text-amber-600 border-amber-200 bg-amber-50" : "text-emerald-600 border-emerald-200 bg-emerald-50"
-            )}>
-              {isUpcoming ? 'Upcoming' : 'Ongoing Contest'}
-            </span>
+            {contest.is_practice ? (
+              <span className="inara-badge border-2 text-indigo-600 border-indigo-200 bg-indigo-50 flex items-center gap-1.5">
+                <Trophy className="w-3 h-3" /> Practice Mode
+              </span>
+            ) : (
+              <span className={cn(
+                "inara-badge border-2",
+                isUpcoming ? "text-amber-600 border-amber-200 bg-amber-50" : "text-emerald-600 border-emerald-200 bg-emerald-50"
+              )}>
+                {isUpcoming ? 'Upcoming' : 'Ongoing Contest'}
+              </span>
+            )}
+            
             {contest.is_private ? (
               <span className="inara-badge border-2 text-rose-600 border-rose-200 bg-rose-50 flex items-center gap-1.5">
                 <Lock className="w-3 h-3" /> Private
@@ -141,20 +149,35 @@ export default function ContestView() {
                 <Unlock className="w-3 h-3" /> Public
               </span>
             )}
+
             {isOwner && (
-              <span className="inara-badge border-2 text-inara-primary border-inara-primary/20 bg-inara-primary/5">Owner Mode</span>
+              <div className="flex items-center gap-2">
+                <span className="inara-badge border-2 text-inara-primary border-inara-primary/20 bg-inara-primary/5">Owner Mode</span>
+                <button 
+                  onClick={() => setAdminMode(!adminMode)}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all border-2 flex items-center gap-1.5",
+                    adminMode ? "bg-rose-500 text-white border-rose-600 shadow-[0_0_10px_rgba(244,63,94,0.3)]" : "bg-white text-inara-logic/40 border-inara-border/10 hover:border-inara-primary/30"
+                  )}
+                >
+                  {adminMode ? <><Eye className="w-3 h-3" /> Admin HUD: ON</> : <><EyeOff className="w-3 h-3" /> Admin HUD: OFF</>}
+                </button>
+              </div>
             )}
           </div>
-          <h1 className="text-5xl font-black tracking-tight text-inara-logic uppercase leading-none">{contest.title}</h1>
+          <h1 className="text-5xl font-black tracking-tight uppercase leading-none">{contest.title}</h1>
           <p className="text-inara-logic/60 max-w-2xl font-medium leading-relaxed italic">{contest.description || 'Join this competitive programming challenge.'}</p>
         </div>
         
         <div className="flex flex-col items-end gap-4 min-w-[240px]">
           <div className="text-right space-y-1">
             <div className="inara-data text-base font-bold flex items-center gap-2 justify-end">
-              <Clock className="w-4 h-4" /> {contest.duration_minutes} minutes
+              <Clock className="w-4 h-4 text-inara-primary" /> 
+              {contest.duration_minutes >= 999999 ? 'Infinite Duration' : `${contest.duration_minutes} minutes`}
             </div>
-            <div className="text-[10px] font-black uppercase text-inara-logic/40">Starts: {new Date(contest.start_time).toLocaleString()}</div>
+            <div className="text-[10px] font-black uppercase text-inara-logic/40">
+              {contest.is_practice ? `Started: ${new Date(contest.start_time).toLocaleDateString()}` : `Starts: ${new Date(contest.start_time).toLocaleString()}`}
+            </div>
           </div>
           
           <div className="flex flex-col gap-3 w-full">
@@ -178,7 +201,7 @@ export default function ContestView() {
                       {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="inara-block bg-white p-8 border-4 border-inara-border">
+                  <AlertDialogContent className="inara-block bg-white p-8 border-4 border-inara-border shadow-2xl">
                     <AlertDialogHeader>
                       <AlertDialogTitle className="text-2xl font-black text-inara-logic uppercase">Delete Contest?</AlertDialogTitle>
                       <AlertDialogDescription className="text-inara-logic/60 font-medium">
@@ -197,7 +220,7 @@ export default function ContestView() {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-            ) : !isParticipant && (
+            ) : !isParticipant && !contest.is_practice && (
               <div className="flex flex-col gap-3 w-full">
                 {contest.is_private && (
                   <div className="space-y-1.5">
@@ -221,9 +244,9 @@ export default function ContestView() {
               </div>
             )}
             
-            {isParticipant && !isOwner && (
+            {(isParticipant || contest.is_practice) && !isOwner && (
               <div className="inara-block bg-inara-primary/5 border-inara-primary/30 px-6 py-3 rounded-xl text-inara-primary font-black text-xs flex items-center justify-center gap-2 w-full">
-                <ListChecks className="w-4 h-4" /> REGISTERED
+                <ListChecks className="w-4 h-4" /> {contest.is_practice ? 'PRACTICE ACTIVE' : 'REGISTERED'}
               </div>
             )}
           </div>
@@ -254,14 +277,17 @@ export default function ContestView() {
                 </thead>
                 <tbody className="divide-y-2 divide-inara-border/5">
                   {problems.map((prob, index) => (
-                    <tr key={prob.id} className="transition-colors group text-inara-logic">
+                    <tr key={prob.id} className="transition-colors group">
                       <td className="p-4 pl-8">
                         <div className="w-8 h-8 rounded bg-inara-logic/5 border-2 border-inara-border/20 flex items-center justify-center font-mono font-black text-inara-primary text-sm transition-colors">
                           {String.fromCharCode(65 + index)}
                         </div>
                       </td>
                       <td className="p-4">
-                        <Link href={`/contests/${contestId}/problems/${prob.id}`} className="font-bold text-inara-logic hover:text-inara-primary transition-colors text-base">
+                        <Link 
+                          href={`/contests/${contestId}/problems/${prob.id}${adminMode ? '?admin=true' : ''}`} 
+                          className="font-bold hover:text-inara-primary transition-colors text-base"
+                        >
                           {prob.title}
                         </Link>
                         <div className="text-[10px] font-mono font-bold text-inara-logic/30 uppercase tracking-tighter mt-0.5">{prob.external_id}</div>
@@ -274,15 +300,16 @@ export default function ContestView() {
                       </td>
                       <td className="p-4 text-right pr-8">
                         <Button 
-                          onClick={() => router.push(`/contests/${contestId}/problems/${prob.id}`)}
-                          className="h-9 px-4 text-xs font-bold bg-white border-2 border-inara-border hover:bg-inara-muted text-inara-logic transition-all"
-                          disabled={!isParticipant && isUpcoming && !isOwner}
+                          onClick={() => router.push(`/contests/${contestId}/problems/${prob.id}${adminMode ? '?admin=true' : ''}`)}
+                          className="h-9 px-4 text-xs font-bold bg-white border-2 border-inara-border hover:bg-inara-muted transition-all"
+                          disabled={!isParticipant && isUpcoming && !isOwner && !contest.is_practice}
                         >
                           Enter <ArrowRight className="w-3 h-3 ml-2" />
                         </Button>
                       </td>
                     </tr>
-                  ))}                  {problems.length === 0 && (
+                  ))}
+                  {problems.length === 0 && (
                     <tr>
                       <td colSpan={5} className="py-24 text-center">
                         <PlayCircle className="w-12 h-12 text-inara-logic/10 mx-auto mb-4" />

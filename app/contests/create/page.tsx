@@ -21,6 +21,7 @@ interface ProblemInput {
   external_id: string
   title: string
   url: string
+  editorial_url?: string
   statementHtml?: string
   timeLimit?: string
   memoryLimit?: string
@@ -40,6 +41,7 @@ function CreateContestForm() {
   const [startTimeStr, setStartTimeStr] = useState('12:00')
   const [duration, setDuration] = useState('120')
   const [isPrivate, setIsPrivate] = useState(false)
+  const [isPractice, setIsPractice] = useState(false)
   const [password, setPassword] = useState('')
   const [rankingRule, setRankingRule] = useState<'ICPC' | 'AtCoder' | 'IOI'>('ICPC')
   const [problems, setProblems] = useState<ProblemInput[]>([])
@@ -73,6 +75,7 @@ function CreateContestForm() {
 
         setTitle(contest.title)
         setDescription(contest.description || '')
+        setIsPractice(contest.is_practice || false)
         
         const start = new Date(contest.start_time)
         setStartDate(start)
@@ -96,6 +99,7 @@ function CreateContestForm() {
             external_id: p.external_id,
             title: p.title,
             url: p.problem_url,
+            editorial_url: p.editorial_url || '',
             statementHtml: p.statement_html,
             timeLimit: p.time_limit,
             memoryLimit: p.memory_limit
@@ -164,7 +168,7 @@ function CreateContestForm() {
   }, [problems])
 
   const addProblem = () => {
-    setProblems([...problems, { oj: 'CF', external_id: '', title: '', url: '' }])
+    setProblems([...problems, { oj: 'CF', external_id: '', title: '', url: '', editorial_url: '' }])
   }
 
   const removeProblem = (index: number) => {
@@ -177,15 +181,18 @@ function CreateContestForm() {
     if (!user) { toast.error("User session lost. Please login."); return; }
 
     if (!title.trim()) { toast.error("Contest title is required"); return; }
-    if (!startDate) { toast.error("Please select a start date"); return; }
     
-    const combinedDateTime = new Date(startDate)
-    const [hours, minutes] = startTimeStr.split(':').map(Number)
-    combinedDateTime.setHours(hours, minutes, 0, 0)
+    let combinedDateTime = new Date()
+    if (!isPractice) {
+      if (!startDate) { toast.error("Please select a start date"); return; }
+      combinedDateTime = new Date(startDate)
+      const [hours, minutes] = startTimeStr.split(':').map(Number)
+      combinedDateTime.setHours(hours, minutes, 0, 0)
 
-    if (!editId && combinedDateTime <= new Date()) {
-      toast.error("Start time must be in the future. Check your system clock.");
-      return;
+      if (!editId && combinedDateTime <= new Date()) {
+        toast.error("Start time must be in the future. Check your system clock.");
+        return;
+      }
     }
 
     if (problems.length === 0) {
@@ -202,9 +209,14 @@ function CreateContestForm() {
     setIsSubmitting(true)
     try {
       const contestData = {
-        title, description, start_time: combinedDateTime.toISOString(),
-        duration_minutes: parseInt(duration), owner_id: user.id,
-        is_private: isPrivate, password: isPrivate ? password : null, ranking_rule: rankingRule
+        title, description, 
+        start_time: isPractice ? new Date().toISOString() : combinedDateTime.toISOString(),
+        duration_minutes: isPractice ? (duration ? parseInt(duration) : 999999) : parseInt(duration), 
+        owner_id: user.id,
+        is_private: isPrivate, 
+        is_practice: isPractice,
+        password: isPrivate ? password : null, 
+        ranking_rule: rankingRule
       }
 
       let contestId = editId
@@ -221,7 +233,8 @@ function CreateContestForm() {
 
       const problemsToInsert = problems.map(p => ({
         contest_id: contestId, oj: p.oj, external_id: p.external_id, title: p.title,
-        problem_url: p.url, statement_html: p.statementHtml, time_limit: p.timeLimit, memory_limit: p.memoryLimit
+        problem_url: p.url, editorial_url: p.editorial_url, statement_html: p.statementHtml, 
+        time_limit: p.timeLimit, memory_limit: p.memoryLimit
       }))
 
       const { error: problemsError } = await supabase.from('problems').insert(problemsToInsert)
@@ -276,39 +289,48 @@ function CreateContestForm() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2 text-inara-logic">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Start Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full h-12 justify-start text-left font-bold border-2 border-inara-border",
-                          !startDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-inara-primary" />
-                        {startDate ? format(startDate, "PPP") : <span>Select Date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Start Time</Label>
-                  <div className="relative">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-inara-primary" />
-                    <Input 
-                      type="time" value={startTimeStr} onChange={e => setStartTimeStr(e.target.value)} 
-                      required className="h-12 pl-12 border-2 border-inara-border font-bold text-inara-logic"
-                    />
+              {!isPractice && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-2 text-inara-logic">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full h-12 justify-start text-left font-bold border-2 border-inara-border",
+                            !startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-inara-primary" />
+                          {startDate ? format(startDate, "PPP") : <span>Select Date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Start Time</Label>
+                    <div className="relative">
+                      <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-inara-primary" />
+                      <Input 
+                        type="time" value={startTimeStr} onChange={e => setStartTimeStr(e.target.value)} 
+                        required className="h-12 pl-12 border-2 border-inara-border font-bold text-inara-logic"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {isPractice && (
+                <div className="p-6 bg-amber-50 border-2 border-amber-200 rounded-xl flex items-center gap-4 text-amber-800 animate-in fade-in">
+                  <Clock className="w-6 h-6 shrink-0" />
+                  <p className="text-sm font-bold">Practice mode starts immediately upon creation. Time and date settings are bypassed.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -329,56 +351,69 @@ function CreateContestForm() {
             
             <div className="space-y-4">
               {problems.map((prob, index) => (
-                <div key={index} className="inara-block bg-white p-6 flex flex-col md:flex-row gap-4 items-end relative group">
+                <div key={index} className="inara-block bg-white p-6 flex flex-col gap-4 relative group">
                   <div className="absolute top-0 left-0 w-2 h-full bg-inara-primary/30 group-hover:bg-inara-primary transition-colors" />
                   
-                  <div className="w-full md:w-40 space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Judge Node</Label>
-                    <Select value={prob.oj} onValueChange={v => {
-                      const newProbs = [...problems]; newProbs[index].oj = v as 'CF' | 'AC'; newProbs[index].title = ''; setProblems(newProbs);
-                    }}>
-                      <SelectTrigger className="h-11 border-2 border-inara-border font-black text-inara-primary">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CF">Codeforces</SelectItem>
-                        <SelectItem value="AC">AtCoder</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="w-full md:w-56 space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Problem ID</Label>
-                    <div className="relative">
-                      <Input 
-                        value={prob.external_id} onChange={e => {
-                          const newProbs = [...problems]; newProbs[index].external_id = e.target.value; newProbs[index].title = ''; setProblems(newProbs);
-                        }} 
-                        placeholder={prob.oj === 'CF' ? "e.g. 123A" : "e.g. abc344_a"}
-                        className="h-11 pr-10 border-2 border-inara-border font-mono font-bold"
-                      />
-                      {scrapingIndex === index && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <Loader2 className="w-4 h-4 animate-spin text-inara-primary" />
-                        </div>
-                      )}
+                  <div className="flex flex-col md:flex-row gap-4 items-end">
+                    <div className="w-full md:w-40 space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Judge Node</Label>
+                      <Select value={prob.oj} onValueChange={v => {
+                        const newProbs = [...problems]; newProbs[index].oj = v as 'CF' | 'AC'; newProbs[index].title = ''; setProblems(newProbs);
+                      }}>
+                        <SelectTrigger className="h-11 border-2 border-inara-border font-black text-inara-primary">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CF">Codeforces</SelectItem>
+                          <SelectItem value="AC">AtCoder</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+
+                    <div className="w-full md:w-56 space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Problem ID</Label>
+                      <div className="relative">
+                        <Input 
+                          value={prob.external_id} onChange={e => {
+                            const newProbs = [...problems]; newProbs[index].external_id = e.target.value; newProbs[index].title = ''; setProblems(newProbs);
+                          }} 
+                          placeholder={prob.oj === 'CF' ? "e.g. 123A" : "e.g. abc344_a"}
+                          className="h-11 pr-10 border-2 border-inara-border font-mono font-bold"
+                        />
+                        {scrapingIndex === index && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Loader2 className="w-4 h-4 animate-spin text-inara-primary" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 space-y-2 w-full">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Resolved Title</Label>
+                      <Input 
+                        value={prob.title} readOnly placeholder="Auto-fetching from OJ..."
+                        className={cn(
+                          "h-11 font-bold border-2 border-dashed border-inara-border/30 bg-inara-muted/10",
+                          prob.title === 'Problem Not Found' && "text-rose-600 border-rose-200 bg-rose-50"
+                        )}
+                      />
+                    </div>
+
+                    <Button type="button" variant="ghost" className="text-inara-logic/30 hover:text-rose-600 h-11 w-11 p-0 transition-colors" onClick={() => removeProblem(index)}>
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
                   </div>
 
-                  <div className="flex-1 space-y-2 w-full">
-                    <Label className="text-[10px] font-black uppercase opacity-40">Resolved Title</Label>
+                  <div className="w-full space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Editorial URL (Visible in Practice Mode)</Label>
                     <Input 
-                      value={prob.title} readOnly placeholder="Auto-fetching from OJ..."
-                      className={cn(
-                        "h-11 font-bold border-2 border-dashed border-inara-border/30 bg-inara-muted/10",
-                        prob.title === 'Problem Not Found' && "text-rose-600 border-rose-200 bg-rose-50"
-                      )}
+                      value={prob.editorial_url} onChange={e => {
+                        const newProbs = [...problems]; newProbs[index].editorial_url = e.target.value; setProblems(newProbs);
+                      }} 
+                      placeholder="e.g. https://codeforces.com/blog/entry/12345"
+                      className="h-11 border-2 border-inara-border font-medium bg-inara-muted/5"
                     />
                   </div>
-
-                  <Button type="button" variant="ghost" className="text-inara-logic/30 hover:text-rose-600 h-11 w-11 p-0 transition-colors" onClick={() => removeProblem(index)}>
-                    <Trash2 className="w-5 h-5" />
-                  </Button>
                 </div>
               ))}
             </div>
@@ -413,6 +448,17 @@ function CreateContestForm() {
 
               <div className="space-y-6 pt-6 border-t-2 border-inara-border/10">
                 <div className="flex items-center justify-between">
+                  <Label htmlFor="is-practice" className="flex items-center gap-2 cursor-pointer font-bold text-inara-logic">
+                    <Trophy className="w-4 h-4 text-amber-500" />
+                    Practice Mode
+                  </Label>
+                  <input 
+                    id="is-practice" type="checkbox" checked={isPractice} onChange={e => setIsPractice(e.target.checked)} 
+                    className="w-6 h-6 rounded-lg border-3 border-inara-border text-inara-primary focus:ring-inara-primary/30 cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
                   <Label htmlFor="is-private" className="flex items-center gap-2 cursor-pointer font-bold text-inara-logic">
                     {isPrivate ? <Lock className="w-4 h-4 text-rose-500" /> : <Unlock className="w-4 h-4 text-emerald-500" />}
                     Private Mode
@@ -434,10 +480,13 @@ function CreateContestForm() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="duration" className="text-[10px] font-black uppercase opacity-40">Duration (Minutes)</Label>
+                  <Label htmlFor="duration" className="text-[10px] font-black uppercase opacity-40">
+                    {isPractice ? 'Duration (Optional - Minutes)' : 'Duration (Minutes)'}
+                  </Label>
                   <Input 
                     id="duration" type="number" value={duration} onChange={e => setDuration(e.target.value)} 
-                    required className="h-12 border-2 font-black text-lg text-inara-logic"
+                    placeholder={isPractice ? 'Infinite if empty' : ''}
+                    required={!isPractice} className="h-12 border-2 font-black text-lg text-inara-logic"
                   />
                 </div>
               </div>
