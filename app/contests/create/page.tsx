@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
 interface ProblemInput {
+  id?: string
   oj: 'CF' | 'AC'
   external_id: string
   title: string
@@ -25,25 +26,13 @@ interface ProblemInput {
   memoryLimit?: string
 }
 
-export default function CreateContest() {
+function CreateContestForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('edit')
+
   const [user, setUser] = useState<any>(null)
   const [isAuthLoading, setIsAuthLoading] = useState(true)
-
-  // Auth Check & Protection
-  useEffect(() => {
-    async function checkUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        toast.error("Sign in to organize a contest")
-        router.push('/login')
-      } else {
-        setUser(user)
-      }
-      setIsAuthLoading(false)
-    }
-    checkUser()
-  }, [router])
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -54,11 +43,75 @@ export default function CreateContest() {
   const [password, setPassword] = useState('')
   const [rankingRule, setRankingRule] = useState<'ICPC' | 'AtCoder' | 'IOI'>('ICPC')
   const [problems, setProblems] = useState<ProblemInput[]>([])
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [scrapingIndex, setScrapingIndex] = useState<number | null>(null)
   const [scrapedIds, setScrapedIds] = useState<Record<number, string>>({})
 
-  // Auto-scrape logic
+  useEffect(() => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error("Sign in to organize a contest")
+        router.push('/login')
+        return
+      }
+      setUser(user)
+
+      if (editId) {
+        const { data: contest, error: contestError } = await supabase
+          .from('contests')
+          .select('*')
+          .eq('id', editId)
+          .single()
+
+        if (contestError || contest.owner_id !== user.id) {
+          toast.error("You don't have permission to edit this contest")
+          router.push('/contests')
+          return
+        }
+
+        setTitle(contest.title)
+        setDescription(contest.description || '')
+        
+        const start = new Date(contest.start_time)
+        setStartDate(start)
+        setStartTimeStr(`${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')}`)
+        
+        setDuration(contest.duration_minutes.toString())
+        setIsPrivate(contest.is_private)
+        setPassword(contest.password || '')
+        setRankingRule(contest.ranking_rule as any)
+
+        const { data: probs } = await supabase
+          .from('problems')
+          .select('*')
+          .eq('contest_id', editId)
+          .order('created_at', { ascending: true })
+
+        if (probs) {
+          const loadedProblems = probs.map(p => ({
+            id: p.id,
+            oj: p.oj,
+            external_id: p.external_id,
+            title: p.title,
+            url: p.problem_url,
+            statementHtml: p.statement_html,
+            timeLimit: p.time_limit,
+            memoryLimit: p.memory_limit
+          }))
+          setProblems(loadedProblems)
+          
+          const tracking: Record<number, string> = {}
+          loadedProblems.forEach((p, i) => { tracking[i] = p.external_id })
+          setScrapedIds(tracking)
+        }
+      }
+      setIsAuthLoading(false)
+    }
+    init()
+  }, [router, editId])
+
   useEffect(() => {
     if (scrapingIndex !== null) return;
     const targetIndex = problems.findIndex((prob, index) => {
@@ -123,27 +176,23 @@ export default function CreateContest() {
     e.preventDefault()
     if (!user) { toast.error("User session lost. Please login."); return; }
 
-    // 1. Title validation
     if (!title.trim()) { toast.error("Contest title is required"); return; }
-
-    // 2. Date validation (Sync with system time)
     if (!startDate) { toast.error("Please select a start date"); return; }
+    
     const combinedDateTime = new Date(startDate)
     const [hours, minutes] = startTimeStr.split(':').map(Number)
     combinedDateTime.setHours(hours, minutes, 0, 0)
 
-    if (combinedDateTime <= new Date()) {
+    if (!editId && combinedDateTime <= new Date()) {
       toast.error("Start time must be in the future. Check your system clock.");
       return;
     }
 
-    // 3. Problem count validation
     if (problems.length === 0) {
       toast.error("Add at least one problem to host a contest.");
       return;
     }
 
-    // 4. Problem validity validation
     const hasInvalid = problems.some(p => !p.title || p.title === 'Problem Not Found' || !p.external_id);
     if (hasInvalid) {
       toast.error("One or more problems are invalid. Check IDs.");
@@ -152,27 +201,34 @@ export default function CreateContest() {
 
     setIsSubmitting(true)
     try {
-      const { data: contest, error: contestError } = await supabase
-        .from('contests')
-        .insert({
-          title, description, start_time: combinedDateTime.toISOString(),
-          duration_minutes: parseInt(duration), owner_id: user.id,
-          is_private: isPrivate, password: isPrivate ? password : null, ranking_rule: rankingRule
-        })
-        .select().single()
+      const contestData = {
+        title, description, start_time: combinedDateTime.toISOString(),
+        duration_minutes: parseInt(duration), owner_id: user.id,
+        is_private: isPrivate, password: isPrivate ? password : null, ranking_rule: rankingRule
+      }
 
-      if (contestError) throw contestError
+      let contestId = editId
+
+      if (editId) {
+        const { error } = await supabase.from('contests').update(contestData).eq('id', editId)
+        if (error) throw error
+        await supabase.from('problems').delete().eq('contest_id', editId)
+      } else {
+        const { data: contest, error } = await supabase.from('contests').insert(contestData).select().single()
+        if (error) throw error
+        contestId = contest.id
+      }
 
       const problemsToInsert = problems.map(p => ({
-        contest_id: contest.id, oj: p.oj, external_id: p.external_id, title: p.title,
+        contest_id: contestId, oj: p.oj, external_id: p.external_id, title: p.title,
         problem_url: p.url, statement_html: p.statementHtml, time_limit: p.timeLimit, memory_limit: p.memoryLimit
       }))
 
       const { error: problemsError } = await supabase.from('problems').insert(problemsToInsert)
       if (problemsError) throw problemsError
 
-      toast.success("Contest launched successfully!")
-      router.push(`/contests/${contest.id}`)
+      toast.success(editId ? "Contest updated successfully!" : "Contest launched successfully!")
+      router.push(`/contests/${contestId}`)
     } catch (error: any) {
       toast.error(error.message)
     } finally {
@@ -183,10 +239,14 @@ export default function CreateContest() {
   if (isAuthLoading) return <div className="flex justify-center p-24 text-inara-primary"><Loader2 className="animate-spin" /></div>
 
   return (
-    <main className="max-w-7xl mx-auto py-12 px-4 w-full">
+    <main className="max-w-7xl mx-auto py-12 px-4 w-full text-inara-logic">
       <div className="mb-10 space-y-2 border-b-4 border-inara-border pb-8">
-        <h1 className="text-5xl font-black tracking-tight text-inara-logic uppercase leading-none">New Challenge</h1>
-        <p className="text-inara-logic/60 font-medium italic">Configure your contest rules and problem set.</p>
+        <h1 className="text-5xl font-black tracking-tight text-inara-logic leading-none">
+          {editId ? 'Edit Challenge' : 'New Challenge'}
+        </h1>
+        <p className="text-inara-logic/60 font-medium italic">
+          {editId ? 'Update your contest rules and problem set.' : 'Configure your contest rules and problem set.'}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -328,7 +388,7 @@ export default function CreateContest() {
         <div className="space-y-8">
           <Card className="inara-block border-0 bg-transparent shadow-none sticky top-24">
             <CardHeader className="bg-inara-primary text-white border-2 border-inara-primary-dark rounded-t-xl py-4">
-              <CardTitle className="text-lg font-black uppercase tracking-tight italic">Contest Config</CardTitle>
+              <CardTitle className="text-lg font-black uppercase tracking-tight italic text-white">Contest Config</CardTitle>
             </CardHeader>
             <CardContent className="bg-white border-2 border-t-0 border-inara-border rounded-b-xl space-y-8 p-8">
               <div className="space-y-4">
@@ -368,7 +428,7 @@ export default function CreateContest() {
                     <Label htmlFor="password" className="text-[10px] font-black uppercase opacity-40">Access Code</Label>
                     <Input 
                       id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} 
-                      placeholder="e.g. INARA_PASS" required={isPrivate} className="h-12 border-2 font-mono font-bold"
+                      placeholder="e.g. INARA_PASS" required={isPrivate} className="h-12 border-2 font-mono font-bold text-inara-logic"
                     />
                   </div>
                 )}
@@ -389,7 +449,7 @@ export default function CreateContest() {
                 disabled={isSubmitting}
                 onClick={handleSubmit}
               >
-                {isSubmitting ? <><Loader2 className="animate-spin mr-2" /> Launching...</> : 'LAUNCH CONTEST'}
+                {isSubmitting ? <><Loader2 className="animate-spin mr-2" /> {editId ? 'Updating...' : 'Launching...'}</> : (editId ? 'UPDATE CONTEST' : 'LAUNCH CONTEST')}
               </Button>
               <p className="text-[10px] text-center text-inara-logic/40 font-bold italic px-4">
                 Verify all problems are "Resolved" before launching your contest.
@@ -399,5 +459,13 @@ export default function CreateContest() {
         </div>
       </form>
     </main>
+  )
+}
+
+export default function CreateContest() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-24 text-inara-primary"><Loader2 className="animate-spin" /></div>}>
+      <CreateContestForm />
+    </Suspense>
   )
 }
