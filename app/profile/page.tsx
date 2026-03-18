@@ -23,6 +23,40 @@ export default function ProfilePage() {
   const [stats, setStats] = useState({ totalSubmissions: 0, acceptedCount: 0, contestsJoined: 0 })
   const [recentContests, setRecentContests] = useState<any[]>([])
   const [arrangedContests, setArrangedContests] = useState<any[]>([])
+  
+  const [cfData, setCfData] = useState<{ rating?: number, rank?: string, avatar?: string } | null>(null)
+  const [acData, setAcData] = useState<{ rating?: number, rank?: string, level?: string } | null>(null)
+
+  useEffect(() => {
+    if (cfHandle && cfHandle.trim()) {
+      fetch(`https://codeforces.com/api/user.info?handles=${cfHandle}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'OK') {
+            const user = data.result[0]
+            setCfData({ rating: user.rating, rank: user.rank, avatar: user.avatar })
+          }
+        })
+        .catch(err => console.error('CF Fetch error:', err))
+    } else if (cfData !== null) {
+      setCfData(null)
+    }
+  }, [cfHandle, cfData])
+
+  useEffect(() => {
+    if (acHandle && acHandle.trim()) {
+      fetch(`https://us-central1-atcoderusersapi.cloudfunctions.net/api/info/username/${acHandle}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setAcData({ rating: data.rating, rank: data.rank, level: data.level })
+          }
+        })
+        .catch(err => console.error('AC Fetch error:', err))
+    } else if (acData !== null) {
+      setAcData(null)
+    }
+  }, [acHandle, acData])
 
   useEffect(() => {
     async function loadData() {
@@ -128,15 +162,21 @@ export default function ProfilePage() {
               <CardDescription className="text-inara-logic/40 font-medium">{user.email}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-               <div className="flex flex-col gap-3">
-                 <div className="flex justify-between items-center text-sm">
-                   <span className="text-inara-logic/40 flex items-center gap-2 font-bold"><Trophy className="w-4 h-4" /> CF Handle</span>
-                   <span className="font-mono font-bold text-inara-primary">{cfHandle || 'None'}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-sm">
-                   <span className="text-inara-logic/40 flex items-center gap-2 font-bold"><Code className="w-4 h-4" /> AC Handle</span>
-                   <span className="font-mono font-bold text-inara-primary">{acHandle || 'None'}</span>
-                 </div>
+               <div className="flex flex-col gap-4">
+                  <AccountCard 
+                    type="CF" 
+                    handle={cfHandle} 
+                    rating={cfData?.rating} 
+                    rank={cfData?.rank} 
+                    url={`https://codeforces.com/profile/${cfHandle}`}
+                  />
+                  <AccountCard 
+                    type="AC" 
+                    handle={acHandle} 
+                    rating={acData?.rating} 
+                    rank={acData?.rank || acData?.level} 
+                    url={`https://atcoder.jp/users/${acHandle}`}
+                  />
                </div>
                <Button variant="outline" size="sm" className="inara-btn bg-white w-full mt-4 h-9 gap-2 text-[10px]">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" /> VERIFIED ACCOUNT
@@ -198,7 +238,7 @@ export default function ProfilePage() {
                     ))}
                     {arrangedContests.length === 0 && (
                       <div className="py-24 text-center text-inara-logic/20 italic font-black text-lg">
-                        You haven't organized any contests yet.
+                        You haven&apos;t organized any contests yet.
                       </div>
                     )}
                   </div>
@@ -334,5 +374,39 @@ function StatCard({ title, value, subtitle }: { title: string, value: string, su
         <p className="text-[10px] text-inara-logic/40 font-bold uppercase">{subtitle}</p>
       </CardContent>
     </Card>
+  )
+}
+
+function AccountCard({ type, handle, rating, rank, url }: { type: 'CF' | 'AC', handle: string, rating?: number, rank?: string, url: string }) {
+  if (!handle) return (
+    <div className="flex items-center justify-between p-3 rounded-xl border-2 border-dashed border-inara-border/10 opacity-40">
+       <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+         {type === 'CF' ? <Trophy className="w-3 h-3" /> : <Code className="w-3 h-3" />}
+         {type === 'CF' ? 'Codeforces' : 'AtCoder'}
+       </span>
+       <span className="text-[10px] font-bold italic">Not linked</span>
+    </div>
+  )
+
+  return (
+    <Link href={url} target="_blank" className="block group">
+      <div className="flex items-center justify-between p-3 rounded-xl border-2 border-inara-border/10 hover:border-inara-primary/30 transition-all hover:bg-inara-muted/5">
+         <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-inara-logic text-white flex items-center justify-center font-black text-xs">
+               {type === 'CF' ? <Trophy className="w-4 h-4" /> : <Code className="w-4 h-4" />}
+            </div>
+            <div className="flex flex-col">
+               <span className="text-[10px] font-black uppercase text-inara-logic group-hover:text-inara-primary transition-colors">{handle}</span>
+               {rank && <span className="text-[9px] font-bold text-inara-logic/40 capitalize leading-none">{rank.replace(/_/g, ' ')}</span>}
+            </div>
+         </div>
+         {rating !== undefined && (
+           <div className="text-right">
+              <div className="text-sm font-black text-inara-primary leading-none">{rating}</div>
+              <div className="text-[8px] font-black text-inara-logic/20 uppercase tracking-tighter">Rating</div>
+           </div>
+         )}
+      </div>
+    </Link>
   )
 }
