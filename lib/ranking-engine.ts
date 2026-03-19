@@ -78,7 +78,7 @@ export function calculateRankings(
         user.score += prob.penalty
       } else {
         // AtCoder / IOI
-        const points = sub.points || 100 // Default points
+        const points = sub.points ?? 100 // Default points if null
         prob.points = points
         user.solved += 1
         user.score += points

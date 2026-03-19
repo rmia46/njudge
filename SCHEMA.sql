@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS submissions (
   language TEXT NOT NULL,
   verdict TEXT DEFAULT 'Pending', 
   verdict_details TEXT,
+  points INTEGER DEFAULT 0,
   submitted_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -53,7 +53,7 @@ Instead of a central server attempting to log in and submit on behalf of users, 
 - [x] Discussion/Comment System (Real-time participant chat)
 
 ### Phase 5: Reliability & Refinement
-- [ ] "Custom Test" support via Extension
-- [ ] Mobile-responsive UI polish
-- [ ] Advanced Ranking Rules (ICPC vs AtCoder/IOI)
+- [x] "Custom Test" support via Extension (CF & AtCoder)
+- [x] Mobile-responsive UI polish (Gallery contrast & Dock fixes)
+- [x] Advanced Ranking Rules (ICPC vs AtCoder/IOI points)
 - [ ] Deployment to Vercel

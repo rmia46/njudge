@@ -54,7 +54,7 @@ export default function ContestsPage() {
     <main className="max-w-7xl mx-auto py-12 px-4 space-y-10 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h1 className="text-5xl font-black tracking-tight text-inara-logic text-white">Contest Gallery</h1>
+          <h1 className="text-5xl font-black tracking-tight text-inara-logic">Contest Gallery</h1>
           <p className="text-inara-logic/60 font-medium">Join challenges or practice with the global community.</p>
         </div>
         <Button asChild className="inara-btn inara-btn-primary h-12 px-8 font-black">

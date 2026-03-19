@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
@@ -8,40 +8,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from '@/lib/supabase'
-import { Loader2, ExternalLink, Save, Play, Send, History, FileText, ChevronRight, Clock, BarChart3, Code2, TerminalSquare } from 'lucide-react'
+import { Loader2, ExternalLink, Send, History, FileText, Code2, Upload } from 'lucide-react'
 import Editor from '@monaco-editor/react'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { ProblemStatement } from '@/components/problem-statement'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
-const LANGUAGE_MAP: Record<string, string> = {
-  '54': 'cpp',
-  '80': 'cpp',
-  '5001': 'cpp',
-  '75': 'java',
-  '5005': 'java',
-  '70': 'python',
-  '5055': 'python',
-  '81': 'go',
-  '5013': 'go'
+const EXTENSION_MAP: Record<string, string[]> = {
+  'cpp': ['.cpp', '.cc', '.cxx', '.c++'],
+  'java': ['.java'],
+  'python': ['.py'],
+  'go': ['.go']
 }
 
 export default function ProblemPage() {
   const params = useParams()
   const contestId = params.contestId as string
   const problemId = params.problemId as string
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [problem, setProblem] = useState<any>(null)
   const [code, setCode] = useState('')
-  const [language, setLanguage] = useState('54')
+  const [language, setLanguage] = useState('')
+  const [languages, setLanguages] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissions, setSubmissions] = useState<any[]>([])
   const [isSaved, setIsSaved] = useState(true)
-  
-  const [customInput, setCustomInput] = useState('')
-  const [customResult, setCustomResult] = useState<{output: string, time: string, memory: string} | null>(null)
-  const [isTesting, setIsTesting] = useState(false)
 
   useEffect(() => {
     const savedCode = localStorage.getItem(`njudge_code_${problemId}`)
@@ -51,19 +45,34 @@ export default function ProblemPage() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== window) return
-      if (event.data && event.data.type === 'NJUDGE_CUSTOM_TEST_RESPONSE') {
-        const { status, data, message } = event.data.payload
-        if (status === 'success') {
-          setCustomResult(data)
+      
+      if (event.data?.type === 'NJUDGE_GET_LANGUAGES_RESPONSE') {
+        const { payload } = event.data;
+        if (payload.status === 'success') {
+          setLanguages(payload.data)
+          if (payload.data.length > 0 && !language) {
+            // Try to restore previous language for this OJ from localstorage
+            const savedLang = localStorage.getItem(`njudge_lang_${problem?.oj || 'default'}`)
+            if (savedLang && payload.data.find((l: any) => l.id === savedLang)) {
+              setLanguage(savedLang)
+            } else {
+              setLanguage(payload.data[0].id)
+            }
+          }
         } else {
-          alert(`Test failed: ${message}`)
+          toast.error(`Could not fetch languages: ${payload.message}`)
         }
-        setIsTesting(false)
       }
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [])
+  }, [language, problem?.oj])
+
+  useEffect(() => {
+    if (language) {
+      localStorage.setItem(`njudge_lang_${problem?.oj || 'default'}`, language)
+    }
+  }, [language, problem?.oj])
 
   useEffect(() => {
     if (code) {
@@ -76,6 +85,10 @@ export default function ProblemPage() {
     async function fetchData() {
       const { data: prob } = await supabase.from('problems').select('*').eq('id', problemId).single()
       setProblem(prob)
+
+      if (prob) {
+        window.postMessage({ type: 'NJUDGE_GET_LANGUAGES', payload: { oj: prob.oj } }, '*')
+      }
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -104,6 +117,15 @@ export default function ProblemPage() {
             }
             return [payload.new, ...current]
           })
+          
+          if (payload.new && payload.new.verdict !== 'In Queue' && payload.new.verdict !== 'Judging') {
+            const isAC = payload.new.verdict === 'OK' || payload.new.verdict === 'Accepted'
+            if (isAC) {
+              toast.success(`Problem Solved! Verdict: ${payload.new.verdict}`)
+            } else {
+              toast.error(`Submission Result: ${payload.new.verdict}`)
+            }
+          }
         }
       )
       .subscribe()
@@ -111,18 +133,53 @@ export default function ProblemPage() {
     return () => { supabase.removeChannel(channel) }
   }, [problemId])
 
-  const handleCustomTest = async () => {
-    setIsTesting(true)
-    setCustomResult(null)
-    window.postMessage({
-      type: 'NJUDGE_CUSTOM_TEST',
-      payload: { oj: problem.oj, code, languageId: language, input: customInput }
-    }, '*')
+  const getEditorLanguage = (langId: string) => {
+    const name = languages.find(l => l.id === langId)?.name?.toLowerCase() || ''
+    if (name.includes('c++')) return 'cpp'
+    if (name.includes('python')) return 'python'
+    if (name.includes('java')) return 'java'
+    if (name.includes('go')) return 'go'
+    if (name.includes('c#')) return 'csharp'
+    if (name.includes('rust')) return 'rust'
+    return 'cpp'
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 256 * 1024) {
+      toast.error("File is too large. Max size is 256KB.")
+      return
+    }
+
+    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+    const editorLang = getEditorLanguage(language)
+    const allowedExtensions = EXTENSION_MAP[editorLang] || []
+    
+    if (allowedExtensions.length > 0 && !allowedExtensions.includes(ext)) {
+      toast.error(`Invalid file extension ${ext}. Expected ${allowedExtensions.join(' or ')} for the selected language.`)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const content = event.target?.result as string
+      setCode(content)
+      setIsSaved(false)
+      toast.success(`File ${file.name} uploaded successfully!`)
+    }
+    reader.onerror = () => {
+      toast.error("Failed to read the file.")
+    }
+    reader.readAsText(file)
   }
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
+    const submissionToast = toast.loading('Sending submission to judge...')
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Please sign in to submit code.')
 
@@ -143,12 +200,15 @@ export default function ProblemPage() {
           submissionId: sub.id,
           supabaseConfig: {
             url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-            key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            accessToken: session?.access_token
           }
         }
       }, '*')
+      
+      toast.success('Submission received by Bridge', { id: submissionToast })
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message, { id: submissionToast })
     } finally {
       setIsSubmitting(false)
     }
@@ -180,8 +240,7 @@ export default function ProblemPage() {
       <Tabs defaultValue="statement" className="w-full">
         <TabsList className="bg-inara-muted/20 p-1 border-2 border-inara-border rounded-xl mb-6">
           <TabsTrigger value="statement" className="gap-2 px-6 font-bold text-sm"><FileText className="w-4 h-4" /> Description</TabsTrigger>
-          <TabsTrigger value="editor" className="gap-2 px-6 font-bold text-sm"><Code2 className="w-4 h-4" /> Code Editor</TabsTrigger>
-          <TabsTrigger value="custom" className="gap-2 px-6 font-bold text-sm"><TerminalSquare className="w-4 h-4" /> Run Tests</TabsTrigger>
+          <TabsTrigger value="editor" className="gap-2 px-6 font-bold text-sm"><Code2 className="w-4 h-4" /> Submit Code</TabsTrigger>
           <TabsTrigger value="history" className="gap-2 px-6 font-bold text-sm"><History className="w-4 h-4" /> Submission Log</TabsTrigger>
         </TabsList>
 
@@ -203,19 +262,13 @@ export default function ProblemPage() {
             <div className="bg-inara-logic text-white p-4 border-b-2 border-inara-border flex justify-between items-center rounded-t-lg">
               <div className="flex gap-4">
                 <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger className="w-[220px] h-9 bg-white/10 border-white/20 text-white font-bold text-xs hover:bg-white/20">
-                    <SelectValue />
+                  <SelectTrigger className="w-[300px] h-9 bg-white/10 border-white/20 text-white font-bold text-xs hover:bg-white/20">
+                    <SelectValue placeholder="Select Language" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="54">C++20 (GCC 11-64)</SelectItem>
-                    <SelectItem value="80">C++23 (GCC 13-64)</SelectItem>
-                    <SelectItem value="5001">C++23 (GCC 12.2)</SelectItem>
-                    <SelectItem value="75">Java 21</SelectItem>
-                    <SelectItem value="5005">Java 21 (OpenJDK)</SelectItem>
-                    <SelectItem value="70">Python 3.11</SelectItem>
-                    <SelectItem value="5055">Python 3.11.4</SelectItem>
-                    <SelectItem value="81">Go 1.22</SelectItem>
-                    <SelectItem value="5013">Go 1.20.6</SelectItem>
+                    {languages.map(lang => (
+                      <SelectItem key={lang.id} value={lang.id}>{lang.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -230,7 +283,7 @@ export default function ProblemPage() {
               <Editor
                 height="600px"
                 defaultLanguage="cpp"
-                language={LANGUAGE_MAP[language]}
+                language={getEditorLanguage(language)}
                 theme="vs-dark"
                 value={code}
                 onChange={(val) => {
@@ -248,13 +301,20 @@ export default function ProblemPage() {
               />
             </div>
             <CardFooter className="bg-white border-[3px] border-t-0 border-inara-border py-6 flex justify-end gap-4 rounded-b-lg">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                onChange={handleFileUpload}
+                accept={EXTENSION_MAP[getEditorLanguage(language)]?.join(',')}
+              />
               <Button 
                 variant="outline" 
                 className="inara-btn h-12 px-8 font-black text-inara-logic border-inara-border hover:bg-inara-muted" 
-                onClick={handleCustomTest}
-                disabled={isTesting || !code}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSubmitting}
               >
-                {isTesting ? <Loader2 className="animate-spin" /> : <><Play className="w-4 h-4 mr-2" /> RUN LOCAL TEST</>}
+                <Upload className="w-4 h-4 mr-2" /> UPLOAD FILE
               </Button>
               <Button 
                 className="inara-btn inara-btn-primary h-12 px-10 font-black" 
@@ -265,40 +325,6 @@ export default function ProblemPage() {
               </Button>
             </CardFooter>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="custom" className="focus-visible:outline-none">
-          <div className="inara-block p-8 space-y-6">
-            <div className="space-y-2">
-              <Label className="font-black text-xs uppercase tracking-widest text-inara-logic opacity-40">Input Stream</Label>
-              <Textarea 
-                placeholder="Paste your test input here..." 
-                className="font-mono text-sm min-h-[150px] border-2 focus-visible:ring-inara-primary/30"
-                value={customInput}
-                onChange={(e) => setCustomInput(e.target.value)}
-              />
-            </div>
-            
-            {customResult ? (
-              <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                <div className="flex justify-between items-center bg-inara-muted/30 p-3 rounded-lg border-2 border-inara-border/10">
-                  <span className="font-black text-[10px] uppercase text-inara-logic">Output Buffer</span>
-                  <div className="flex gap-4 text-[10px] font-mono font-bold text-inara-logic/60">
-                    <span>TIME: {customResult.time}ms</span>
-                    <span>MEM: {customResult.memory}KB</span>
-                  </div>
-                </div>
-                <div className="bg-slate-950 text-emerald-400 p-6 rounded-xl font-mono text-sm whitespace-pre-wrap border-2 border-slate-800 shadow-inner">
-                  {customResult.output}
-                </div>
-              </div>
-            ) : (
-              <div className="py-20 text-center border-2 border-dashed rounded-2xl opacity-30 flex flex-col items-center gap-3">
-                <TerminalSquare className="w-10 h-10" />
-                <p className="text-sm font-bold">Awaiting test execution...</p>
-              </div>
-            )}
-          </div>
         </TabsContent>
 
         <TabsContent value="history" className="focus-visible:outline-none">
