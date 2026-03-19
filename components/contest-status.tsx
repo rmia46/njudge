@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Loader2, ExternalLink, Clock, User as UserIcon, Code, Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 export function ContestStatus({ contestId, problems }: { contestId: string, problems: any[] }) {
   const [submissions, setSubmissions] = useState<any[]>([])

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, MessageSquare, Reply, Send, User as UserIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function ContestComments({ contestId }: { contestId: string }) {
   const [comments, setComments] = useState<any[]>([])
